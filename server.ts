@@ -79,6 +79,7 @@ const upload = multer({
 
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper for Asia/Kolkata date YYYY-MM-DD
 function getKolkataDateString(): string {
