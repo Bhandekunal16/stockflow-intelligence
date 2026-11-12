@@ -2,5 +2,7 @@
   "name": "StockFolio - Portfolio Management & Screenshot Extraction Dashboard",
   "description": "Production-ready fintech stock portfolio dashboard with automated screenshot extraction, performance tracking, date comparisons, and visual analytics.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

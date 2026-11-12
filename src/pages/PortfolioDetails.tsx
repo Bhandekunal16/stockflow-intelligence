@@ -5,14 +5,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  Briefcase,
   Search,
   ArrowUpDown,
   TrendingUp,
-  Download,
 } from 'lucide-react';
 import { portfolioService } from '../services/portfolio.service';
-import { PortfolioSnapshot, PortfolioStock } from '../types/portfolio.types';
+import { PortfolioSnapshot } from '../types/portfolio.types';
 import { formatINR } from '../utils/currency';
 import {
   calculateDifference,
@@ -24,7 +22,7 @@ import { StatBadge } from '../components/common/StatBadge';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
 interface OutletContextType {
-  snapshots: PortfolioSnapshot[];
+  snapshots?: PortfolioSnapshot[];
 }
 
 type SortColumn = 'company' | 'shares' | 'currentValue' | 'referenceValue' | 'difference' | 'percentage';
@@ -32,7 +30,8 @@ type SortColumn = 'company' | 'shares' | 'currentValue' | 'referenceValue' | 'di
 export const PortfolioDetails: React.FC = () => {
   const { date } = useParams<{ date: string }>();
   const navigate = useNavigate();
-  const { snapshots } = useOutletContext<OutletContextType>();
+  const context = useOutletContext<OutletContextType>();
+  const snapshots = Array.isArray(context?.snapshots) ? context.snapshots : [];
 
   const [snapshot, setSnapshot] = useState<PortfolioSnapshot | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -54,9 +53,25 @@ export const PortfolioDetails: React.FC = () => {
         const res = await portfolioService.getSnapshotByDate(date!);
         if (isMounted) {
           if (res.success && res.data) {
-            setSnapshot(res.data);
+            // Handle both array of snapshots and single snapshot object
+            let snapItem: PortfolioSnapshot | null = null;
+            if (Array.isArray(res.data)) {
+              snapItem = res.data.find((s: any) => s.date === date) || res.data[0] || null;
+            } else {
+              snapItem = res.data;
+            }
+
+            if (snapItem) {
+              setSnapshot({
+                ...snapItem,
+                date: snapItem.date || date!,
+                data: Array.isArray(snapItem.data) ? snapItem.data : [],
+              });
+            } else {
+              setError(`No portfolio snapshot found for date: ${date}`);
+            }
           } else {
-            setError(`No portfolio snapshot found for date: ${date}`);
+            setError(res.message || `No portfolio snapshot found for date: ${date}`);
           }
         }
       } catch (err: any) {
@@ -88,12 +103,16 @@ export const PortfolioDetails: React.FC = () => {
     };
   }, [date, snapshots]);
 
-  const summary = useMemo(() => {
-    return calculateStockSummary(snapshot?.data || []);
+  const rawStocks = useMemo(() => {
+    return Array.isArray(snapshot?.data) ? snapshot.data : [];
   }, [snapshot]);
 
+  const summary = useMemo(() => {
+    return calculateStockSummary(rawStocks);
+  }, [rawStocks]);
+
   const processedStocks = useMemo(() => {
-    const list = (snapshot?.data || []).map((stock) => {
+    const list = rawStocks.map((stock) => {
       const difference = calculateDifference(stock.currentValue, stock.referenceValue);
       const percentage = calculatePercentageChange(stock.currentValue, stock.referenceValue);
       return {
@@ -113,7 +132,7 @@ export const PortfolioDetails: React.FC = () => {
         }
         return sortDirection === 'asc' ? valA - valB : valB - valA;
       });
-  }, [snapshot, searchQuery, sortColumn, sortDirection]);
+  }, [rawStocks, searchQuery, sortColumn, sortDirection]);
 
   const handleSort = (col: SortColumn) => {
     if (sortColumn === col) {
@@ -164,10 +183,10 @@ export const PortfolioDetails: React.FC = () => {
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               <Calendar className="w-5 h-5 text-indigo-600" />
-              Snapshot: {formatDate(snapshot.date, 'DD MMMM YYYY')}
+              Snapshot: {formatDate(snapshot.date || date, 'DD MMMM YYYY')}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5 font-mono">
-              Key: {snapshot.date} • Captured in Asia/Kolkata timezone
+              Key: {snapshot.date || date} • Captured in Asia/Kolkata timezone
             </p>
           </div>
         </div>
@@ -243,7 +262,7 @@ export const PortfolioDetails: React.FC = () => {
           </div>
 
           <div className="text-xs text-slate-500 font-medium">
-            Recorded Holdings: <span className="font-bold text-slate-800">{snapshot.data.length}</span>
+            Recorded Holdings: <span className="font-bold text-slate-800">{rawStocks.length}</span>
           </div>
         </div>
 
@@ -308,35 +327,43 @@ export const PortfolioDetails: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {processedStocks.map((stock, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-4 px-6 font-semibold text-slate-900 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                      {stock.company.slice(0, 2).toUpperCase()}
-                    </div>
-                    <span className="truncate max-w-sm">{stock.company}</span>
-                  </td>
-                  <td className="py-4 px-6 text-right font-mono font-medium text-slate-700">
-                    {stock.shares.toLocaleString('en-IN')}
-                  </td>
-                  <td className="py-4 px-6 text-right font-mono font-bold text-slate-900">
-                    {formatINR(stock.currentValue)}
-                  </td>
-                  <td className="py-4 px-6 text-right font-mono text-slate-600">
-                    {formatINR(stock.referenceValue)}
-                  </td>
-                  <td
-                    className={`py-4 px-6 text-right font-mono font-semibold ${
-                      stock.difference >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                    }`}
-                  >
-                    {formatINR(stock.difference, { showSign: true })}
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <StatBadge percentage={stock.percentage} size="sm" />
+              {processedStocks.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-400">
+                    {searchQuery ? `No holdings match "${searchQuery}"` : 'No holdings in this snapshot'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                processedStocks.map((stock, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-4 px-6 font-semibold text-slate-900 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                        {stock.company.slice(0, 2).toUpperCase()}
+                      </div>
+                      <span className="truncate max-w-sm">{stock.company}</span>
+                    </td>
+                    <td className="py-4 px-6 text-right font-mono font-medium text-slate-700">
+                      {stock.shares.toLocaleString('en-IN')}
+                    </td>
+                    <td className="py-4 px-6 text-right font-mono font-bold text-slate-900">
+                      {formatINR(stock.currentValue)}
+                    </td>
+                    <td className="py-4 px-6 text-right font-mono text-slate-600">
+                      {formatINR(stock.referenceValue)}
+                    </td>
+                    <td
+                      className={`py-4 px-6 text-right font-mono font-semibold ${
+                        stock.difference >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                      }`}
+                    >
+                      {formatINR(stock.difference, { showSign: true })}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <StatBadge percentage={stock.percentage} size="sm" />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

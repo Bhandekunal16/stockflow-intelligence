@@ -4,6 +4,7 @@ import {
   HistoricalResponse,
   SnapshotDetailResponse,
   HealthCheckResponse,
+  PortfolioSnapshot,
 } from '../types/portfolio.types';
 
 export const portfolioService = {
@@ -73,8 +74,22 @@ export const portfolioService = {
    * GET /api/portfolio/:date
    */
   async getSnapshotByDate(date: string): Promise<SnapshotDetailResponse> {
-    const response = await apiClient.get<SnapshotDetailResponse>(`/api/portfolio/${date}`);
-    return response.data;
+    const response = await apiClient.get<any>(`/api/portfolio/${date}`);
+    const resData = response.data;
+
+    // The backend API might return { data: [ { ...snapshot } ] } or { data: { ...snapshot } }
+    if (resData && resData.data) {
+      if (Array.isArray(resData.data)) {
+        const found =
+          resData.data.find((s: PortfolioSnapshot) => s.date === date) || resData.data[0] || null;
+        return {
+          ...resData,
+          data: found,
+        };
+      }
+    }
+
+    return resData;
   },
 
   /**

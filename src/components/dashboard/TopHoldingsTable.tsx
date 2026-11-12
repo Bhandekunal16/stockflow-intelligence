@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpDown, ExternalLink, TrendingUp } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, TrendingUp, Layers } from 'lucide-react';
 import { PortfolioStock } from '../../types/portfolio.types';
 import { formatINR } from '../../utils/currency';
 import { calculateDifference, calculatePercentageChange } from '../../utils/calculations';
@@ -16,6 +16,8 @@ type SortField = 'company' | 'shares' | 'currentValue' | 'referenceValue' | 'dif
 export const TopHoldingsTable: React.FC<TopHoldingsTableProps> = ({ stocks, limit = 5 }) => {
   const [sortField, setSortField] = useState<SortField>('currentValue');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  // If stocks <= 10, default to showing all holdings
+  const [showAll, setShowAll] = useState<boolean>(stocks.length <= 10);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -46,28 +48,41 @@ export const TopHoldingsTable: React.FC<TopHoldingsTableProps> = ({ stocks, limi
       return sortOrder === 'asc' ? valA - valB : valB - valA;
     });
 
-    return limit ? list.slice(0, limit) : list;
-  }, [stocks, sortField, sortOrder, limit]);
+    return showAll ? list : list.slice(0, limit);
+  }, [stocks, sortField, sortOrder, limit, showAll]);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+      <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-indigo-600" />
-            Top Portfolio Holdings
+            Portfolio Holdings
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Ranked by allocation value with real-time profit and loss metrics
+            Displaying {processedStocks.length} of {stocks.length} assets sorted by{' '}
+            <span className="font-semibold text-slate-700 capitalize">{sortField}</span>
           </p>
         </div>
-        <Link
-          to="/holdings"
-          className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
-        >
-          View All ({stocks.length})
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
+
+        <div className="flex items-center gap-3">
+          {stocks.length > limit && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+            >
+              {showAll ? 'Show Top 5' : `Show All (${stocks.length})`}
+            </button>
+          )}
+
+          <Link
+            to="/holdings"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+          >
+            Holdings Page
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

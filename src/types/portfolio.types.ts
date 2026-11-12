@@ -31,7 +31,8 @@ export interface HistoricalResponse {
 
 export interface SnapshotDetailResponse {
   success: boolean;
-  data: PortfolioSnapshot;
+  data: PortfolioSnapshot | PortfolioSnapshot[];
+  count?: number;
   message?: string;
   statusCode?: number;
 }

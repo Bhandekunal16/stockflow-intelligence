@@ -14,7 +14,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-// Data persistence file setup
+// Upstream portfolio API backend URL
+const TARGET_API_URL = process.env.API_BACKEND_URL || 'http://147.224.251.137:8003';
+
+// Data persistence file setup for fallback
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'portfolio-store.json');
 
@@ -83,10 +86,20 @@ function getKolkataDateString(): string {
 }
 
 // API Health Check
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get('/api/health', async (_req: Request, res: Response) => {
+  let upstreamStatus = 'unknown';
+  try {
+    const check = await fetch(`${TARGET_API_URL}/api/portfolio`);
+    upstreamStatus = check.ok ? 'connected' : `status_${check.status}`;
+  } catch (e: any) {
+    upstreamStatus = `unreachable: ${e.message}`;
+  }
+
   res.json({
     success: true,
-    message: 'Stock Portfolio Extraction API is healthy',
+    message: 'Stock Portfolio Extraction API Gateway is active',
+    upstreamTarget: TARGET_API_URL,
+    upstreamStatus,
     timezone: 'Asia/Kolkata',
     currentDate: getKolkataDateString(),
     timestamp: new Date().toISOString(),
@@ -100,11 +113,12 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
     return res.json({
       status: 'ok',
       success: true,
-      service: 'Stock Portfolio Screenshot Extraction API',
+      service: 'Stock Portfolio Screenshot Extraction API Gateway',
       version: '1.0.0',
+      upstreamTarget: TARGET_API_URL,
       timezone: 'Asia/Kolkata',
       endpoints: {
-        health: 'GET /',
+        health: 'GET /api/health',
         extract: 'POST /api/portfolio/extract',
         getAll: 'GET /api/portfolio',
         getByDate: 'GET /api/portfolio/:date',
@@ -115,47 +129,59 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// GET /api/portfolio - Retrieve all snapshots
-app.get('/api/portfolio', (_req: Request, res: Response) => {
-  const snapshots = loadSnapshots();
-  if (!snapshots || snapshots.length === 0) {
-    return res.status(404).json({
-      success: false,
-      count: 0,
-      data: [],
-      message: 'No portfolio records found',
-      statusCode: 404,
+// GET /api/portfolio - Retrieve all snapshots (proxied to target API, with fallback)
+app.get('/api/portfolio', async (_req: Request, res: Response) => {
+  try {
+    const upstreamRes = await fetch(`${TARGET_API_URL}/api/portfolio`);
+    const data = await upstreamRes.json();
+    return res.status(upstreamRes.status).json(data);
+  } catch (err: any) {
+    console.warn(`Upstream at ${TARGET_API_URL} unreachable, serving local snapshots:`, err.message);
+    const snapshots = loadSnapshots();
+    if (!snapshots || snapshots.length === 0) {
+      return res.status(404).json({
+        success: false,
+        count: 0,
+        data: [],
+        message: 'No portfolio records found',
+        statusCode: 404,
+      });
+    }
+
+    const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
+    return res.json({
+      success: true,
+      count: sorted.length,
+      data: sorted,
     });
   }
-
-  // Sort chronologically ascending
-  const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
-
-  return res.json({
-    success: true,
-    count: sorted.length,
-    data: sorted,
-  });
 });
 
-// GET /api/portfolio/:date - Retrieve date-specific snapshot (YYYY-MM-DD)
-app.get('/api/portfolio/:date', (req: Request, res: Response) => {
+// GET /api/portfolio/:date - Retrieve date-specific snapshot (proxied to target API, with fallback)
+app.get('/api/portfolio/:date', async (req: Request, res: Response) => {
   const { date } = req.params;
-  const snapshots = loadSnapshots();
-  const snapshot = snapshots.find((s) => s.date === date);
+  try {
+    const upstreamRes = await fetch(`${TARGET_API_URL}/api/portfolio/${date}`);
+    const data = await upstreamRes.json();
+    return res.status(upstreamRes.status).json(data);
+  } catch (err: any) {
+    console.warn(`Upstream at ${TARGET_API_URL} unreachable, serving local snapshot for date ${date}:`, err.message);
+    const snapshots = loadSnapshots();
+    const snapshot = snapshots.find((s) => s.date === date);
 
-  if (!snapshot) {
-    return res.status(404).json({
-      success: false,
-      message: `No portfolio records found for date: ${date}`,
-      statusCode: 404,
+    if (!snapshot) {
+      return res.status(404).json({
+        success: false,
+        message: `No portfolio records found for date: ${date}`,
+        statusCode: 404,
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: snapshot,
     });
   }
-
-  return res.json({
-    success: true,
-    data: snapshot,
-  });
 });
 
 // POST /api/portfolio/extract - Extract stock portfolio from image
@@ -188,22 +214,41 @@ app.post(
     });
   },
   async (req: Request, res: Response) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid request: Missing required file field "image"',
-          statusCode: 400,
-        });
-      }
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request: Missing required file field "image"',
+        statusCode: 400,
+      });
+    }
 
+    // Try forwarding to upstream target API first
+    try {
+      const formData = new FormData();
+      const blob = new Blob([new Uint8Array(req.file.buffer)], { type: req.file.mimetype });
+      formData.append('image', blob, req.file.originalname || 'screenshot.png');
+
+      const upstreamRes = await fetch(`${TARGET_API_URL}/api/portfolio/extract`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (upstreamRes.ok) {
+        const upstreamData = await upstreamRes.json();
+        return res.status(upstreamRes.status).json(upstreamData);
+      }
+    } catch (upstreamErr: any) {
+      console.warn('Upstream extraction failed, falling back to server-side Gemini OCR:', upstreamErr.message);
+    }
+
+    // Fallback: Local Gemini Vision extraction
+    try {
       const buffer = req.file.buffer;
       const mimeType = req.file.mimetype;
       const base64Data = buffer.toString('base64');
 
       let extractedStocks: PortfolioStock[] = [];
 
-      // Check Gemini API key
       const apiKey = process.env.GEMINI_API_KEY;
       if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
         try {
@@ -273,11 +318,9 @@ Do NOT invent fake stock data. If the image is not a portfolio or contains no st
           }
         } catch (geminiError: any) {
           console.error('Gemini vision extraction error:', geminiError);
-          // If Gemini fails, we will check if validation fails below
         }
       }
 
-      // Financial validation: Each stock must have valid company name and non-negative numbers
       const validStocks = extractedStocks.filter(
         (s) => s.company.length > 0 && s.shares > 0 && s.currentValue >= 0 && s.referenceValue >= 0
       );
@@ -291,14 +334,12 @@ Do NOT invent fake stock data. If the image is not a portfolio or contains no st
         });
       }
 
-      // Update or create snapshot for today in Asia/Kolkata timezone
       const todayDate = getKolkataDateString();
       const snapshots = loadSnapshots();
       const existingIndex = snapshots.findIndex((s) => s.date === todayDate);
 
       const nowIso = new Date().toISOString();
       if (existingIndex >= 0) {
-        // Subsequent upload on the same date updates that day's snapshot
         snapshots[existingIndex].data = validStocks;
         snapshots[existingIndex].updatedAt = nowIso;
       } else {
@@ -330,8 +371,13 @@ Do NOT invent fake stock data. If the image is not a portfolio or contains no st
   }
 );
 
-// Optional helper endpoint: Reset or clear data (for settings/testing)
-app.delete('/api/portfolio', (_req: Request, res: Response) => {
+// Optional helper endpoint: Reset or clear data
+app.delete('/api/portfolio', async (_req: Request, res: Response) => {
+  try {
+    await fetch(`${TARGET_API_URL}/api/portfolio`, { method: 'DELETE' });
+  } catch (e) {
+    // Ignore upstream delete failure
+  }
   saveSnapshots([]);
   res.json({ success: true, message: 'All portfolio snapshots cleared' });
 });
@@ -357,6 +403,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Stock Portfolio App server running on http://0.0.0.0:${PORT}`);
+    console.log(`🔗 Connected to upstream portfolio backend: ${TARGET_API_URL}`);
   });
 }
 
