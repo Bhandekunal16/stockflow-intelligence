@@ -36,8 +36,8 @@ export const Holdings: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Active Holdings</h2>
-          <p className="text-xs text-slate-600 mt-1">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Active Holdings</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
             View all current stock holdings and live valuations from your latest snapshot.
           </p>
         </div>
@@ -57,10 +57,10 @@ export const Holdings: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Portfolio Holdings</h2>
-          <p className="text-xs text-slate-600 mt-0.5">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Portfolio Holdings</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Active holdings from latest snapshot on{' '}
-            <span className="font-semibold text-slate-800">
+            <span className="font-semibold text-[var(--text-primary)]">
               {formatDate(latestSnapshot?.date, 'DD MMMM YYYY')}
             </span>
           </p>
@@ -68,7 +68,7 @@ export const Holdings: React.FC = () => {
 
         <Link
           to="/upload"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-[var(--accent-contrast)] text-xs font-semibold rounded-xl transition-colors self-start sm:self-auto cursor-pointer"
         >
           <UploadCloud className="w-4 h-4" aria-hidden="true" />
           Update Holdings

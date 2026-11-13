@@ -19,10 +19,10 @@ export const StatBadge: React.FC<StatBadgeProps> = ({
   const isNegative = percentage < -0.001;
 
   const colorStyles = isPositive
-    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    ? 'bg-[var(--status-success)]/10 text-[var(--status-success)] border-[var(--status-success)]/30'
     : isNegative
-    ? 'bg-rose-50 text-rose-700 border-rose-200'
-    : 'bg-slate-100 text-slate-700 border-slate-200';
+    ? 'bg-[var(--status-error)]/10 text-[var(--status-error)] border-[var(--status-error)]/30'
+    : 'bg-[var(--bg-elevated)]/60 text-[var(--text-secondary)] border-[var(--border-default)]';
 
   const sizeStyles = {
     sm: 'text-xs px-2 py-0.5 gap-1',
@@ -34,18 +34,18 @@ export const StatBadge: React.FC<StatBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center rounded-lg border font-medium ${colorStyles} ${sizeStyles[size]}`}
+      className={`inline-flex items-center rounded-lg border font-medium font-mono ${colorStyles} ${sizeStyles[size]}`}
     >
       {isPositive ? (
-        <ArrowUpRight className={iconSize} />
+        <ArrowUpRight className={iconSize} aria-hidden="true" />
       ) : isNegative ? (
-        <ArrowDownRight className={iconSize} />
+        <ArrowDownRight className={iconSize} aria-hidden="true" />
       ) : (
-        <Minus className={iconSize} />
+        <Minus className={iconSize} aria-hidden="true" />
       )}
       <span>{formatPercentage(percentage)}</span>
       {showDifference && difference !== undefined && (
-        <span className="opacity-80 ml-0.5">({formatINR(difference, { showSign: true })})</span>
+        <span className="opacity-85 ml-0.5">({formatINR(difference, { showSign: true })})</span>
       )}
     </span>
   );

@@ -80,8 +80,8 @@ export const Settings: React.FC = () => {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">System Settings</h2>
-        <p className="text-xs text-slate-600 mt-1">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">System Settings</h2>
+        <p className="text-xs text-[var(--text-secondary)] mt-1">
           Check live server availability and manage stored portfolio snapshots.
         </p>
       </div>
@@ -89,21 +89,21 @@ export const Settings: React.FC = () => {
       {/* Server Status Card */}
       <section
         aria-labelledby="server-status-heading"
-        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5"
+        className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-default)] space-y-5"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
               aria-hidden="true"
-              className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)] text-[var(--accent-primary)] flex items-center justify-center flex-shrink-0"
             >
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="server-status-heading" className="text-base font-bold text-slate-900">
+              <h3 id="server-status-heading" className="text-base font-bold text-[var(--text-primary)]">
                 Server Status
               </h3>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Live availability of the portfolio API service
               </p>
             </div>
@@ -113,7 +113,7 @@ export const Settings: React.FC = () => {
             type="button"
             onClick={() => checkServerStatus(true)}
             disabled={serverStatus === 'checking'}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors border border-indigo-200 cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-[var(--bg-elevated)]/70 hover:bg-[var(--bg-elevated)] text-[var(--accent-primary)] text-xs font-semibold transition-colors border border-[var(--border-default)] cursor-pointer disabled:opacity-50 self-start sm:self-auto"
           >
             <Activity
               aria-hidden="true"
@@ -129,22 +129,22 @@ export const Settings: React.FC = () => {
           aria-live="polite"
           className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
             serverStatus === 'up'
-              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+              ? 'bg-[var(--status-success)]/10 border-[var(--status-success)]/30 text-[var(--status-success)]'
               : serverStatus === 'down'
-              ? 'bg-rose-50/70 border-rose-200 text-rose-900'
-              : 'bg-slate-50 border-slate-200 text-slate-700'
+              ? 'bg-[var(--status-error)]/10 border-[var(--status-error)]/30 text-[var(--status-error)]'
+              : 'bg-[var(--bg-canvas)] border-[var(--border-default)] text-[var(--status-info)]'
           }`}
         >
           <div className="flex items-center gap-3">
             {serverStatus === 'up' && (
-              <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" aria-hidden="true" />
+              <CheckCircle2 className="w-5 h-5 text-[var(--status-success)] flex-shrink-0" aria-hidden="true" />
             )}
             {serverStatus === 'down' && (
-              <AlertCircle className="w-5 h-5 text-rose-700 flex-shrink-0" aria-hidden="true" />
+              <AlertCircle className="w-5 h-5 text-[var(--status-error)] flex-shrink-0" aria-hidden="true" />
             )}
             {serverStatus === 'checking' && (
               <Activity
-                className="w-5 h-5 text-indigo-600 animate-spin flex-shrink-0"
+                className="w-5 h-5 text-[var(--status-info)] animate-spin flex-shrink-0"
                 aria-hidden="true"
               />
             )}
@@ -156,7 +156,7 @@ export const Settings: React.FC = () => {
                   ? 'Server is Down'
                   : 'Checking Server Status...'}
               </p>
-              <p className="text-xs opacity-80 mt-0.5">
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 {serverStatus === 'up'
                   ? 'The portfolio API is online and responding normally.'
                   : serverStatus === 'down'
@@ -167,7 +167,7 @@ export const Settings: React.FC = () => {
           </div>
 
           {lastChecked && serverStatus !== 'checking' && (
-            <span className="text-xs font-medium opacity-75 whitespace-nowrap">
+            <span className="text-xs font-mono font-medium text-[var(--text-secondary)] whitespace-nowrap">
               Last checked: {lastChecked}
             </span>
           )}
@@ -177,23 +177,23 @@ export const Settings: React.FC = () => {
       {/* Database & Storage Management */}
       <section
         aria-labelledby="storage-heading"
-        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4"
+        className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--border-default)] space-y-4"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
               aria-hidden="true"
-              className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 rounded-xl bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] flex items-center justify-center flex-shrink-0"
             >
               <Trash2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 id="storage-heading" className="text-base font-bold text-slate-900">
+              <h3 id="storage-heading" className="text-base font-bold text-[var(--text-primary)]">
                 Database &amp; Snapshot Management
               </h3>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Currently holding{' '}
-                <span className="font-bold text-slate-900">{snapshots.length}</span> recorded
+                <span className="font-bold font-mono text-[var(--text-primary)]">{snapshots.length}</span> recorded
                 snapshot{snapshots.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -203,7 +203,7 @@ export const Settings: React.FC = () => {
             type="button"
             onClick={() => setShowConfirmClear(true)}
             disabled={snapshots.length === 0}
-            className="px-4 py-2 min-h-[40px] bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed self-start sm:self-auto"
+            className="px-4 py-2 min-h-[40px] bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] hover:bg-[var(--status-error)]/20 text-xs font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed self-start sm:self-auto"
           >
             Reset All Snapshots
           </button>
@@ -217,14 +217,14 @@ export const Settings: React.FC = () => {
         title="Confirm Snapshot Reset"
         titleId="confirm-reset-title"
         maxWidthClass="max-w-md"
-        icon={<Trash2 className="w-5 h-5 text-rose-600" aria-hidden="true" />}
+        icon={<Trash2 className="w-5 h-5 text-[var(--status-error)]" aria-hidden="true" />}
         footer={
           <>
             <button
               type="button"
               onClick={() => setShowConfirmClear(false)}
               disabled={isClearing}
-              className="px-4 py-2 min-h-[40px] bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 min-h-[40px] bg-[var(--bg-canvas)] border border-[var(--border-default)] text-[var(--text-primary)] rounded-xl text-xs font-semibold hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
@@ -232,16 +232,16 @@ export const Settings: React.FC = () => {
               type="button"
               onClick={handleClearData}
               disabled={isClearing}
-              className="px-4 py-2 min-h-[40px] bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 min-h-[40px] bg-[var(--status-error)] text-[var(--accent-contrast)] rounded-xl text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
             >
               {isClearing ? 'Deleting...' : 'Yes, Delete All Data'}
             </button>
           </>
         }
       >
-        <p className="text-sm text-slate-600 leading-relaxed">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Are you sure you want to delete all{' '}
-          <span className="font-semibold text-slate-900">{snapshots.length}</span> stored
+          <span className="font-semibold font-mono text-[var(--text-primary)]">{snapshots.length}</span> stored
           portfolio snapshot{snapshots.length !== 1 ? 's' : ''}? This action cannot be undone.
         </p>
       </Modal>

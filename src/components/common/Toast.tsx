@@ -66,36 +66,36 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           <div
             key={toast.id}
             role={toast.type === 'error' ? 'alert' : 'status'}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-lg border transition-all duration-200 ${
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-xl border bg-[var(--bg-card)] text-[var(--text-primary)] transition-all duration-200 ${
               toast.type === 'success'
-                ? 'bg-white border-emerald-200 text-slate-800'
+                ? 'border-[var(--status-success)]/40'
                 : toast.type === 'error'
-                ? 'bg-white border-rose-200 text-slate-800'
-                : 'bg-white border-slate-200 text-slate-800'
+                ? 'border-[var(--status-error)]/40'
+                : 'border-[var(--status-info)]/40'
             }`}
           >
             <div className="flex-shrink-0 mt-0.5">
               {toast.type === 'success' && (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+                <CheckCircle2 className="w-5 h-5 text-[var(--status-success)]" aria-hidden="true" />
               )}
               {toast.type === 'error' && (
-                <AlertCircle className="w-5 h-5 text-rose-600" aria-hidden="true" />
+                <AlertCircle className="w-5 h-5 text-[var(--status-error)]" aria-hidden="true" />
               )}
               {toast.type === 'info' && (
-                <Info className="w-5 h-5 text-indigo-600" aria-hidden="true" />
+                <Info className="w-5 h-5 text-[var(--status-info)]" aria-hidden="true" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-slate-900 leading-snug">{toast.title}</h4>
+              <h4 className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{toast.title}</h4>
               {toast.message && (
-                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{toast.message}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{toast.message}</p>
               )}
             </div>
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
               aria-label={`Dismiss ${toast.title} notification`}
-              className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors p-1.5 -mr-1 -mt-1 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] rounded-lg transition-colors p-1.5 -mr-1 -mt-1 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
             >
               <X className="w-4 h-4" aria-hidden="true" />
             </button>

@@ -228,10 +228,10 @@ export const UploadPortfolio: React.FC = () => {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Page Title */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
           Upload Portfolio Screenshot
         </h2>
-        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+        <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
           Upload a clear screenshot of your stock broker portfolio (Zerodha, Groww, Upstox, Angel
           One, or any broker). Holdings are extracted automatically and indexed in Asia/Kolkata
           timezone.
@@ -239,7 +239,7 @@ export const UploadPortfolio: React.FC = () => {
       </div>
 
       {/* Main Upload Card */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+      <div className="bg-[var(--bg-card)] p-6 sm:p-8 rounded-2xl border border-[var(--border-default)] space-y-5">
         {!selectedFile ? (
           <>
             {/* Keyboard-accessible Drop Zone */}
@@ -259,8 +259,8 @@ export const UploadPortfolio: React.FC = () => {
               }}
               className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center transition-colors cursor-pointer flex flex-col items-center justify-center ${
                 isDragging
-                  ? 'border-indigo-600 bg-indigo-50/50'
-                  : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50'
+                  ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
+                  : 'border-[var(--border-default)] hover:border-[var(--accent-primary)]/70 bg-[var(--bg-canvas)]/60 hover:bg-[var(--bg-canvas)]'
               }`}
             >
               <input
@@ -276,36 +276,42 @@ export const UploadPortfolio: React.FC = () => {
               />
               <div
                 aria-hidden="true"
-                className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 shadow-xs"
+                className="w-16 h-16 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-default)] flex items-center justify-center text-[var(--accent-primary)] mb-4"
               >
                 <UploadCloud className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-1">
+              <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">
                 Drag & Drop your portfolio screenshot here
               </h3>
-              <p className="text-xs text-slate-600 mb-4">
-                or <span className="text-indigo-700 font-semibold underline">browse files</span>{' '}
+              <p className="text-xs text-[var(--text-secondary)] mb-4">
+                or <span className="text-[var(--accent-primary)] font-semibold underline">browse files</span>{' '}
                 from your computer
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-600">
-                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">JPEG</span>
-                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">PNG</span>
-                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">WebP</span>
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-[var(--text-secondary)]">
+                <span className="px-2.5 py-0.5 rounded-md bg-[var(--bg-card)] border border-[var(--border-default)] font-medium">
+                  JPEG
+                </span>
+                <span className="px-2.5 py-0.5 rounded-md bg-[var(--bg-card)] border border-[var(--border-default)] font-medium">
+                  PNG
+                </span>
+                <span className="px-2.5 py-0.5 rounded-md bg-[var(--bg-card)] border border-[var(--border-default)] font-medium">
+                  WebP
+                </span>
                 <span>• Max file size: 10 MB</span>
               </div>
             </div>
 
             {/* Separate secondary sample action (prevents nested clickable conflict) */}
-            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100">
-              <p className="text-xs text-slate-500">
+            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-[var(--border-default)]">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Want to preview extraction without a screenshot?
               </p>
               <button
                 type="button"
                 onClick={handleLoadSampleScreenshot}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition-colors border border-indigo-200 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl bg-[var(--bg-elevated)]/60 hover:bg-[var(--bg-elevated)] text-[var(--accent-primary)] text-xs font-semibold transition-colors border border-[var(--border-default)] cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-indigo-600" aria-hidden="true" />
+                <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" aria-hidden="true" />
                 Load Sample Brokerage Screenshot
               </button>
             </div>
@@ -313,17 +319,17 @@ export const UploadPortfolio: React.FC = () => {
         ) : (
           /* File Selected & Preview Mode */
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   aria-hidden="true"
-                  className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] text-[var(--accent-primary)] flex items-center justify-center flex-shrink-0"
                 >
                   <FileImage className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate">{selectedFile.name}</h4>
-                  <p className="text-xs text-slate-600 font-mono mt-0.5">
+                  <h4 className="text-xs font-bold text-[var(--text-primary)] truncate">{selectedFile.name}</h4>
+                  <p className="text-xs text-[var(--text-secondary)] font-mono mt-0.5">
                     {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type}
                   </p>
                 </div>
@@ -335,7 +341,7 @@ export const UploadPortfolio: React.FC = () => {
                   onClick={handleRemoveImage}
                   aria-label="Remove selected image"
                   title="Remove selected image"
-                  className="p-2 text-slate-500 hover:text-rose-700 rounded-xl hover:bg-white transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  className="p-2 text-[var(--text-secondary)] hover:text-[var(--status-error)] rounded-xl hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" aria-hidden="true" />
                 </button>
@@ -344,7 +350,7 @@ export const UploadPortfolio: React.FC = () => {
 
             {/* Thumbnail Preview */}
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-h-96 flex items-center justify-center bg-slate-900/5">
+              <div className="relative rounded-2xl overflow-hidden border border-[var(--border-default)] max-h-96 flex items-center justify-center bg-[var(--bg-canvas)]">
                 <img
                   src={previewUrl}
                   alt={`Preview of ${selectedFile.name}`}
@@ -358,28 +364,28 @@ export const UploadPortfolio: React.FC = () => {
               <div
                 role="status"
                 aria-live="polite"
-                className="space-y-2 p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200"
+                className="space-y-2 p-5 rounded-2xl bg-[var(--bg-canvas)] border border-[var(--accent-primary)]/40"
               >
-                <div className="flex items-center justify-between text-xs font-semibold text-indigo-900">
+                <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-primary)]">
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-indigo-600" aria-hidden="true" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-primary)]" aria-hidden="true" />
                     {extractionStep || 'Processing screenshot...'}
                   </span>
-                  <span className="font-mono">{uploadProgress}%</span>
+                  <span className="font-mono text-[var(--accent-primary)]">{uploadProgress}%</span>
                 </div>
                 <div
                   role="progressbar"
                   aria-valuenow={uploadProgress}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  className="w-full h-2.5 rounded-full bg-indigo-100 overflow-hidden"
+                  className="w-full h-2.5 rounded-full bg-[var(--bg-elevated)] overflow-hidden"
                 >
                   <div
-                    className="h-full bg-indigo-600 rounded-full transition-all duration-300"
+                    className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-indigo-800 mt-1">
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
                   Extracting company names, quantities, market values, and invested amounts...
                 </p>
               </div>
@@ -392,7 +398,7 @@ export const UploadPortfolio: React.FC = () => {
                   type="button"
                   onClick={handleRemoveImage}
                   disabled={isExtracting}
-                  className="px-5 py-2.5 min-h-[42px] rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 min-h-[42px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -400,7 +406,7 @@ export const UploadPortfolio: React.FC = () => {
                   type="button"
                   onClick={handleUploadAndExtract}
                   disabled={isExtracting}
-                  className="flex items-center gap-2 px-6 py-2.5 min-h-[42px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 min-h-[42px] rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-[var(--accent-contrast)] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isExtracting ? (
                     <>
@@ -423,12 +429,12 @@ export const UploadPortfolio: React.FC = () => {
         {errorMessage && (
           <div
             role="alert"
-            className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-900"
+            className="p-4 rounded-xl bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 flex items-start gap-3 text-[var(--status-error)]"
           >
-            <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <ShieldAlert className="w-5 h-5 text-[var(--status-error)] flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="text-xs">
               <h4 className="font-bold">Extraction Error</h4>
-              <p className="mt-0.5 leading-relaxed">{errorMessage}</p>
+              <p className="mt-0.5 leading-relaxed text-[var(--text-primary)]/90">{errorMessage}</p>
             </div>
           </div>
         )}
@@ -437,19 +443,19 @@ export const UploadPortfolio: React.FC = () => {
       {/* Extracted Stocks Summary & Table */}
       {extractedStocks && extractedSummary && (
         <div className="space-y-6">
-          <div className="bg-emerald-50/70 p-6 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-[var(--bg-card)] p-6 rounded-2xl border border-[var(--status-success)]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div
                 aria-hidden="true"
-                className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-xl bg-[var(--status-success)]/10 border border-[var(--status-success)]/30 text-[var(--status-success)] flex items-center justify-center flex-shrink-0"
               >
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Extraction Complete: {extractedStocks.length} Stocks Detected
                 </h3>
-                <p className="text-xs text-slate-700 mt-0.5">
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                   Portfolio snapshot indexed in Asia/Kolkata timezone.
                 </p>
               </div>
@@ -459,14 +465,14 @@ export const UploadPortfolio: React.FC = () => {
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="px-4 py-2 min-h-[40px] rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+                className="px-4 py-2 min-h-[40px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-colors cursor-pointer"
               >
                 Upload Another
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-[var(--accent-contrast)] text-xs font-semibold transition-colors cursor-pointer"
               >
                 <span>Go to Dashboard</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />

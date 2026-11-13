@@ -99,21 +99,21 @@ export const PortfolioDetails: React.FC = () => {
     return (
       <div
         role="alert"
-        className="bg-white p-10 rounded-2xl border border-slate-200 text-center max-w-lg mx-auto space-y-4"
+        className="bg-[var(--bg-card)] p-10 rounded-2xl border border-[var(--border-default)] text-center max-w-lg mx-auto space-y-4"
       >
         <div
           aria-hidden="true"
-          className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto"
+          className="w-12 h-12 rounded-xl bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] flex items-center justify-center mx-auto"
         >
           <Calendar className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900">Snapshot Not Found</h3>
-        <p className="text-sm text-slate-600 leading-relaxed">
+        <h3 className="text-lg font-bold text-[var(--text-primary)]">Snapshot Not Found</h3>
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           {error || `Unable to locate portfolio records for ${date}.`}
         </p>
         <Link
           to="/history"
-          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-[var(--accent-contrast)] rounded-xl text-xs font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           Back to History
@@ -131,16 +131,16 @@ export const PortfolioDetails: React.FC = () => {
             to="/history"
             aria-label="Back to portfolio history"
             title="Back to History"
-            className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           </Link>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-600" aria-hidden="true" />
+            <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[var(--accent-primary)]" aria-hidden="true" />
               <span>Snapshot: {formatDate(snapshot.date || date, 'DD MMMM YYYY')}</span>
             </h2>
-            <p className="text-xs text-slate-600 mt-0.5 font-mono">
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-mono">
               Key: {snapshot.date || date} • Captured in Asia/Kolkata timezone
             </p>
           </div>
@@ -152,7 +152,7 @@ export const PortfolioDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate(`/history/${dateNav.prev}`)}
-              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" aria-hidden="true" />
               <span>Prev ({dateNav.prev})</span>
@@ -163,7 +163,7 @@ export const PortfolioDetails: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate(`/history/${dateNav.next}`)}
-              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-colors cursor-pointer"
             >
               <span>Next ({dateNav.next})</span>
               <ChevronRight className="w-4 h-4" aria-hidden="true" />

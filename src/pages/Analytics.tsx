@@ -1,9 +1,9 @@
 import React from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { PieChart as PieIcon, TrendingUp, UploadCloud } from 'lucide-react';
+import { Activity, TrendingUp, UploadCloud } from 'lucide-react';
 import { PortfolioSnapshot } from '../types/portfolio.types';
-import { AllocationPieChart } from '../components/charts/AllocationPieChart';
-import { CurrentVsRefBarChart } from '../components/charts/CurrentVsRefBarChart';
+import { AllocationLineChart } from '../components/charts/AllocationLineChart';
+import { CurrentVsRefLineChart } from '../components/charts/CurrentVsRefLineChart';
 import { TopPerformersList } from '../components/charts/TopPerformersList';
 import { PerformanceChart } from '../components/dashboard/PerformanceChart';
 import { EmptyState } from '../components/common/EmptyState';
@@ -40,8 +40,8 @@ export const Analytics: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Portfolio Analytics</h2>
-          <p className="text-xs text-slate-600 mt-1">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Portfolio Analytics</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
             Visual breakdown of asset distribution, gainers/losers, and historical trajectory.
           </p>
         </div>
@@ -50,7 +50,7 @@ export const Analytics: React.FC = () => {
           description="Analytics are computed from your verified screenshot extractions. Upload a portfolio screenshot to generate your visual charts."
           actionText="Upload Portfolio Screenshot"
           actionHref="/upload"
-          icon={PieIcon}
+          icon={Activity}
         />
       </div>
     );
@@ -64,8 +64,8 @@ export const Analytics: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Portfolio Analytics</h2>
-          <p className="text-xs text-slate-600 mt-0.5">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Portfolio Analytics</h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Deep financial analytics powered by {snapshots.length} historical snapshot
             {snapshots.length > 1 ? 's' : ''}
           </p>
@@ -73,7 +73,7 @@ export const Analytics: React.FC = () => {
 
         <Link
           to="/upload"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-[var(--accent-contrast)] text-xs font-semibold rounded-xl transition-colors self-start sm:self-auto cursor-pointer"
         >
           <UploadCloud className="w-4 h-4" aria-hidden="true" />
           Update Portfolio
@@ -81,64 +81,74 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Snapshot High-Level Stat Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-default)]">
+        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Active Valuation
           </span>
-          <h3 className="text-xl font-bold font-mono text-indigo-700 mt-1">
+          <h3 className="text-xl font-bold font-mono text-[var(--accent-primary)] mt-1">
             {formatINR(summary.totalCurrentValue)}
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             Snapshot: {formatDate(latestSnapshot?.date, 'DD MMM YYYY')}
           </p>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Invested Capital
           </span>
-          <h3 className="text-xl font-bold font-mono text-slate-800 mt-1">
+          <h3 className="text-xl font-bold font-mono text-[var(--text-primary)] mt-1">
             {formatINR(summary.totalReferenceValue)}
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Reference cost basis</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Reference cost basis</p>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Overall Unrealized Return
           </span>
           <h3
             className={`text-xl font-bold font-mono mt-1 ${
-              isPositive ? 'text-emerald-700' : 'text-rose-700'
+              isPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'
             }`}
           >
             {formatINR(summary.totalDifference, { showSign: true })}
           </h3>
           <p
-            className={`text-xs font-semibold mt-0.5 ${
-              isPositive ? 'text-emerald-700' : 'text-rose-700'
+            className={`text-xs font-semibold font-mono mt-0.5 ${
+              isPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'
             }`}
           >
             {formatPercentage(summary.percentageChange)} total return
           </p>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
+          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
             Diversification
           </span>
-          <h3 className="text-xl font-bold font-mono text-slate-900 mt-1">
+          <h3 className="text-xl font-bold font-mono text-[var(--text-primary)] mt-1">
             {stocks.length} Holdings
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Individual asset positions</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Individual asset positions</p>
         </div>
       </div>
 
-      {/* Top 2 Visual Charts: Asset Allocation Pie & Current vs Reference Bar */}
+      {/* Top 2 Visual Line Charts: Allocation Trajectory & Current vs Reference */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AllocationPieChart stocks={stocks} />
-        <CurrentVsRefBarChart stocks={stocks} topCount={6} />
+        <AllocationLineChart
+          stocks={stocks}
+          snapshots={snapshots}
+          snapshotDate={latestSnapshot?.date}
+          snapshotTimestamp={latestSnapshot?.updatedAt || latestSnapshot?.createdAt}
+        />
+        <CurrentVsRefLineChart
+          stocks={stocks}
+          topCount={6}
+          snapshotDate={latestSnapshot?.date}
+          snapshotTimestamp={latestSnapshot?.updatedAt || latestSnapshot?.createdAt}
+        />
       </div>
 
       {/* Top Gainers & Losers */}
@@ -147,8 +157,8 @@ export const Analytics: React.FC = () => {
       {/* Historical Portfolio Growth Trend */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-indigo-600" aria-hidden="true" />
-          <h3 className="text-base font-bold text-slate-900">Historical Portfolio Growth</h3>
+          <TrendingUp className="w-5 h-5 text-[var(--accent-primary)]" aria-hidden="true" />
+          <h3 className="text-base font-bold text-[var(--text-primary)]">Historical Portfolio Growth</h3>
         </div>
         <PerformanceChart snapshots={snapshots} />
       </div>

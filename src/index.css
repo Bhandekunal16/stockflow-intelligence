@@ -1,13 +1,45 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Theme 3 – Graphite (Premium / Minimal) Centralized Design Tokens
+   Change colors here to update the entire application globally.
+   ========================================================================== */
+:root {
+  --bg-canvas: #18181B;
+  --bg-sidebar: #09090B;
+  --bg-card: #27272A;
+  --bg-elevated: #3F3F46;
+
+  --accent-primary: #A78BFA;
+  --accent-secondary: #8B5CF6;
+  --accent-contrast: #09090B;
+
+  --status-success: #34D399;
+  --status-warning: #FBBF24;
+  --status-error: #F87171;
+  --status-info: #60A5FA;
+
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --border-default: #3F3F46;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: dark;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
   }
 
   /* Accessible keyboard focus indicator across all interactive elements */
   :focus-visible {
-    outline: 2px solid #4f46e5;
+    outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
   }
 
@@ -15,6 +47,25 @@
   .font-mono {
     font-variant-numeric: tabular-nums;
   }
+}
+
+/* Subtle dark scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-sidebar);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525B;
 }
 
 /* Respect user reduced-motion preferences (WCAG 2.2 AA) */

@@ -37,20 +37,20 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-sidebar)]/80 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl ${maxWidthClass} w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto`}
+        className={`bg-[var(--bg-card)] rounded-2xl ${maxWidthClass} w-full p-6 shadow-2xl border border-[var(--border-default)] max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100">
+        <div className="flex items-center justify-between gap-3 pb-4 border-b border-[var(--border-default)]">
           <div className="flex items-center gap-2.5 min-w-0">
             {icon && <span className="flex-shrink-0">{icon}</span>}
-            <h3 id={titleId} className="text-base font-bold text-slate-900 truncate">
+            <h3 id={titleId} className="text-base font-bold text-[var(--text-primary)] truncate">
               {title}
             </h3>
           </div>
@@ -58,7 +58,7 @@ export const Modal: React.FC<ModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-2 -mr-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
+            className="p-2 -mr-1.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -67,7 +67,7 @@ export const Modal: React.FC<ModalProps> = ({
         <div className="py-5">{children}</div>
 
         {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-[var(--border-default)]">
             {footer}
           </div>
         )}

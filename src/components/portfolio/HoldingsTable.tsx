@@ -93,12 +93,12 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
 
   const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) {
-      return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />;
+      return <ArrowUpDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" aria-hidden="true" />;
     }
     return sortDirection === 'asc' ? (
-      <ArrowUp className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
+      <ArrowUp className="w-3.5 h-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
     ) : (
-      <ArrowDown className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
+      <ArrowDown className="w-3.5 h-3.5 text-[var(--accent-primary)]" aria-hidden="true" />
     );
   };
 
@@ -123,16 +123,16 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
   return (
     <section
       aria-label={title}
-      className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden"
+      className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-default)] overflow-hidden"
     >
       {/* Table Header & Controls */}
-      <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 sm:p-6 border-b border-[var(--border-default)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-600 flex-shrink-0" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-[var(--accent-primary)] flex-shrink-0" aria-hidden="true" />
             <span>{title}</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
             {subtitle ||
               `Showing ${processedStocks.length} of ${stocks.length} holding${
                 stocks.length === 1 ? '' : 's'
@@ -147,7 +147,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
                 Search holdings by company name
               </label>
               <Search
-                className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                className="w-4 h-4 text-[var(--text-secondary)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                 aria-hidden="true"
               />
               <input
@@ -156,14 +156,14 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full min-h-[40px] pl-9 pr-9 py-2 text-xs text-slate-800 placeholder:text-slate-400 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                className="w-full min-h-[40px] pl-9 pr-9 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] bg-[var(--bg-canvas)] border border-[var(--border-default)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/25 focus:border-[var(--accent-primary)] transition-colors"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search query"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
@@ -175,7 +175,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
             <button
               type="button"
               onClick={() => setShowAll((prev) => !prev)}
-              className="min-h-[38px] text-xs font-semibold px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+              className="min-h-[38px] text-xs font-semibold px-3.5 py-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
             >
               {showAll ? `Show Top ${limit}` : `Show All (${stocks.length})`}
             </button>
@@ -184,7 +184,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
           {showAllLink && (
             <Link
               to="/holdings"
-              className="min-h-[38px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/70 transition-colors"
+              className="min-h-[38px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10 transition-colors"
             >
               <span>View Holdings</span>
               <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
@@ -196,7 +196,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
       {/* Responsive Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-slate-50/90 text-slate-600 uppercase tracking-wider font-semibold border-b border-slate-100">
+          <thead className="bg-[var(--bg-canvas)]/70 text-[var(--text-secondary)] uppercase tracking-wider font-semibold border-b border-[var(--border-default)]">
             <tr>
               {columns.map((col) => (
                 <th
@@ -210,9 +210,9 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSort(col.key)}
-                    className={`inline-flex items-center gap-1.5 py-1 rounded-md hover:text-slate-900 transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 py-1 rounded-md hover:text-[var(--text-primary)] transition-colors cursor-pointer ${
                       col.align === 'right' ? 'flex-row-reverse' : ''
-                    } ${sortColumn === col.key ? 'text-indigo-700 font-bold' : ''}`}
+                    } ${sortColumn === col.key ? 'text-[var(--accent-primary)] font-bold' : ''}`}
                   >
                     <span>{col.label}</span>
                     {renderSortIcon(col.key)}
@@ -221,18 +221,18 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[var(--border-default)]">
             {processedStocks.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-10 px-6 text-center text-slate-500">
-                  <p className="text-sm font-medium text-slate-700">
+                <td colSpan={6} className="py-10 px-6 text-center text-[var(--text-secondary)]">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
                     No holdings match &ldquo;{searchQuery}&rdquo;
                   </p>
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="mt-3 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                      className="mt-3 px-4 py-2 rounded-xl bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Clear Search Filter
                     </button>
@@ -241,12 +241,12 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
               </tr>
             ) : (
               processedStocks.map((stock, idx) => (
-                <tr key={`${stock.company}-${idx}`} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                <tr key={`${stock.company}-${idx}`} className="hover:bg-[var(--bg-elevated)]/40 transition-colors">
+                  <td className="py-3.5 px-4 sm:px-6 font-semibold text-[var(--text-primary)]">
                     <div className="flex items-center gap-3 min-w-[160px]">
                       <div
                         aria-hidden="true"
-                        className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs flex-shrink-0"
+                        className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--accent-primary)] font-bold flex items-center justify-center text-xs flex-shrink-0"
                       >
                         {stock.company.slice(0, 2).toUpperCase()}
                       </div>
@@ -255,18 +255,18 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({
                       </span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-medium text-slate-700 whitespace-nowrap">
+                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-medium text-[var(--text-secondary)] whitespace-nowrap">
                     {stock.shares.toLocaleString('en-IN')}
                   </td>
-                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono font-bold text-[var(--text-primary)] whitespace-nowrap">
                     {formatINR(stock.currentValue)}
                   </td>
-                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 whitespace-nowrap">
+                  <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-[var(--text-secondary)] whitespace-nowrap">
                     {formatINR(stock.referenceValue)}
                   </td>
                   <td
                     className={`py-3.5 px-4 sm:px-6 text-right font-mono font-semibold whitespace-nowrap ${
-                      stock.difference >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                      stock.difference >= 0 ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'
                     }`}
                   >
                     {formatINR(stock.difference, { showSign: true })}
