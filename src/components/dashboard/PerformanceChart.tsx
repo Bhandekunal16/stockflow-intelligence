@@ -111,33 +111,33 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({ snapshots })
         <div
           role="group"
           aria-label="Performance line chart metric"
-          className="flex items-center bg-[var(--bg-canvas)] border border-[var(--border-default)] p-1 rounded-xl self-start sm:self-auto"
+          className="inline-flex items-center gap-1 bg-[#18181B] border border-[#3F3F46] p-1 rounded-[12px] self-start sm:self-auto"
         >
           <button
             type="button"
             aria-pressed={metricMode === 'valuation'}
             onClick={() => setMetricMode('valuation')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-[8px] transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC] focus-visible:ring-offset-1 focus-visible:ring-offset-[#18181B] ${
               metricMode === 'valuation'
-                ? 'bg-[var(--bg-elevated)] text-[var(--accent-primary)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-[#3F3A46] text-[#C084FC]'
+                : 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#3F3F46]/30'
             }`}
           >
-            <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-            Valuation
+            <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+            <span>Valuation</span>
           </button>
           <button
             type="button"
             aria-pressed={metricMode === 'pnl'}
             onClick={() => setMetricMode('pnl')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-semibold rounded-[8px] transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC] focus-visible:ring-offset-1 focus-visible:ring-offset-[#18181B] ${
               metricMode === 'pnl'
-                ? 'bg-[var(--bg-elevated)] text-[var(--accent-primary)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-[#3F3A46] text-[#C084FC]'
+                : 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#3F3F46]/30'
             }`}
           >
-            <Activity className="w-3.5 h-3.5" aria-hidden="true" />
-            Net P&amp;L
+            <Activity className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+            <span>Net P&amp;L</span>
           </button>
         </div>
       </div>
