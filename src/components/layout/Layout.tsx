@@ -1,15 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { usePortfolio } from '../../hooks/usePortfolio';
 import { useToast } from '../common/Toast';
 
+const SIDEBAR_STORAGE_KEY = 'stockfolio.sidebar.expanded';
+
 export const Layout: React.FC = () => {
-  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [isPinnedExpanded, setIsPinnedExpanded] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+      return saved === null ? true : saved === 'true';
+    } catch {
+      return true;
+    }
+  });
+  const [isHoverExpanded, setIsHoverExpanded] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const { snapshots, latestSnapshot, refetch, loading, error } = usePortfolio();
   const { success, error: toastError } = useToast();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isPinnedExpanded));
+    } catch {
+      // Ignore storage errors in restricted environments
+    }
+  }, [isPinnedExpanded]);
+
+  const isDesktopExpanded = isPinnedExpanded || isHoverExpanded;
+
+  const handleToggleExpand = useCallback(() => {
+    setIsPinnedExpanded((prev) => !prev);
+    setIsHoverExpanded(false);
+  }, []);
+
+  const handleHoverChange = useCallback(
+    (hovering: boolean) => {
+      if (!isPinnedExpanded) {
+        setIsHoverExpanded(hovering);
+      } else if (!hovering) {
+        setIsHoverExpanded(false);
+      }
+    },
+    [isPinnedExpanded]
+  );
 
   const handleRefresh = async () => {
     await refetch();
@@ -21,7 +57,7 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-canvas)] flex flex-col font-sans text-[var(--text-primary)] antialiased selection:bg-[var(--accent-primary)]/30 selection:text-[var(--text-primary)]">
+    <div className="min-h-screen bg-[var(--bg-canvas)] flex flex-col font-sans text-[var(--text-primary)] antialiased selection:bg-[var(--accent-primary)]/30 selection:text-[var(--text-primary)] overflow-x-hidden">
       {/* Skip to main content link for keyboard accessibility */}
       <a
         href="#main-content"
@@ -32,8 +68,10 @@ export const Layout: React.FC = () => {
 
       {/* Sidebar */}
       <Sidebar
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
+        expanded={isDesktopExpanded}
+        pinnedExpanded={isPinnedExpanded}
+        onToggleExpand={handleToggleExpand}
+        onHoverChange={handleHoverChange}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
         holdingsCount={latestSnapshot?.data?.length || 0}
@@ -41,8 +79,8 @@ export const Layout: React.FC = () => {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          collapsed ? 'lg:pl-20' : 'lg:pl-64'
+        className={`flex-1 min-w-0 flex flex-col transition-[padding] duration-200 ease-out ${
+          isDesktopExpanded ? 'lg:pl-64' : 'lg:pl-20'
         }`}
       >
         <Header
