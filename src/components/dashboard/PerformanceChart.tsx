@@ -94,27 +94,35 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({ snapshots })
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+        <div
+          role="group"
+          aria-label="Chart visualization mode"
+          className="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto"
+        >
           <button
+            type="button"
+            aria-pressed={chartType === 'area'}
             onClick={() => setChartType('area')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
               chartType === 'area'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <TrendingUp className="w-3.5 h-3.5" />
+            <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
             Area Trend
           </button>
           <button
+            type="button"
+            aria-pressed={chartType === 'bar'}
             onClick={() => setChartType('bar')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
               chartType === 'bar'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <BarChart3 className="w-3.5 h-3.5" />
+            <BarChart3 className="w-3.5 h-3.5" aria-hidden="true" />
             Comparison Bar
           </button>
         </div>

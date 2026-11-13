@@ -1,31 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate, useOutletContext } from 'react-router-dom';
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  Search,
-  ArrowUpDown,
-  TrendingUp,
-} from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { portfolioService } from '../services/portfolio.service';
 import { PortfolioSnapshot } from '../types/portfolio.types';
-import { formatINR } from '../utils/currency';
-import {
-  calculateDifference,
-  calculatePercentageChange,
-  calculateStockSummary,
-} from '../utils/calculations';
+import { calculateStockSummary } from '../utils/calculations';
 import { formatDate } from '../utils/date';
-import { StatBadge } from '../components/common/StatBadge';
+import { HoldingsTable } from '../components/portfolio/HoldingsTable';
+import { PortfolioKpiStrip } from '../components/portfolio/PortfolioKpiStrip';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
 interface OutletContextType {
   snapshots?: PortfolioSnapshot[];
 }
-
-type SortColumn = 'company' | 'shares' | 'currentValue' | 'referenceValue' | 'difference' | 'percentage';
 
 export const PortfolioDetails: React.FC = () => {
   const { date } = useParams<{ date: string }>();
@@ -37,11 +23,6 @@ export const PortfolioDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortColumn, setSortColumn] = useState<SortColumn>('currentValue');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-
-  // Fetch snapshot for date
   useEffect(() => {
     if (!date) return;
     let isMounted = true;
@@ -53,7 +34,6 @@ export const PortfolioDetails: React.FC = () => {
         const res = await portfolioService.getSnapshotByDate(date!);
         if (isMounted) {
           if (res.success && res.data) {
-            // Handle both array of snapshots and single snapshot object
             let snapItem: PortfolioSnapshot | null = null;
             if (Array.isArray(res.data)) {
               snapItem = res.data.find((s: any) => s.date === date) || res.data[0] || null;
@@ -111,57 +91,31 @@ export const PortfolioDetails: React.FC = () => {
     return calculateStockSummary(rawStocks);
   }, [rawStocks]);
 
-  const processedStocks = useMemo(() => {
-    const list = rawStocks.map((stock) => {
-      const difference = calculateDifference(stock.currentValue, stock.referenceValue);
-      const percentage = calculatePercentageChange(stock.currentValue, stock.referenceValue);
-      return {
-        ...stock,
-        difference,
-        percentage,
-      };
-    });
-
-    return list
-      .filter((s) => s.company.toLowerCase().includes(searchQuery.trim().toLowerCase()))
-      .sort((a, b) => {
-        const valA: any = a[sortColumn];
-        const valB: any = b[sortColumn];
-        if (typeof valA === 'string') {
-          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        }
-        return sortDirection === 'asc' ? valA - valB : valB - valA;
-      });
-  }, [rawStocks, searchQuery, sortColumn, sortDirection]);
-
-  const handleSort = (col: SortColumn) => {
-    if (sortColumn === col) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(col);
-      setSortDirection('desc');
-    }
-  };
-
   if (loading) {
     return <LoadingSpinner size="lg" label={`Loading portfolio snapshot for ${date}...`} />;
   }
 
   if (error || !snapshot) {
     return (
-      <div className="bg-white p-10 rounded-2xl border border-slate-200 text-center max-w-lg mx-auto space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+      <div
+        role="alert"
+        className="bg-white p-10 rounded-2xl border border-slate-200 text-center max-w-lg mx-auto space-y-4"
+      >
+        <div
+          aria-hidden="true"
+          className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto"
+        >
           <Calendar className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-slate-900">Snapshot Not Found</h3>
-        <p className="text-xs text-slate-500 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           {error || `Unable to locate portfolio records for ${date}.`}
         </p>
         <Link
           to="/history"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           Back to History
         </Link>
       </div>
@@ -175,199 +129,65 @@ export const PortfolioDetails: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/history"
-            className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+            aria-label="Back to portfolio history"
             title="Back to History"
+            className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           </Link>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-600" />
-              Snapshot: {formatDate(snapshot.date || date, 'DD MMMM YYYY')}
+              <Calendar className="w-5 h-5 text-indigo-600" aria-hidden="true" />
+              <span>Snapshot: {formatDate(snapshot.date || date, 'DD MMMM YYYY')}</span>
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5 font-mono">
+            <p className="text-xs text-slate-600 mt-0.5 font-mono">
               Key: {snapshot.date || date} • Captured in Asia/Kolkata timezone
             </p>
           </div>
         </div>
 
         {/* Previous / Next Snapshot Navigation */}
-        <div className="flex items-center gap-2">
+        <nav aria-label="Snapshot date navigation" className="flex items-center gap-2">
           {dateNav.prev && (
             <button
+              type="button"
               onClick={() => navigate(`/history/${dateNav.prev}`)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
               <span>Prev ({dateNav.prev})</span>
             </button>
           )}
 
           {dateNav.next && (
             <button
+              type="button"
               onClick={() => navigate(`/history/${dateNav.next}`)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
             >
               <span>Next ({dateNav.next})</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
-        </div>
+        </nav>
       </div>
 
-      {/* Summary KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-xs">
-        <div className="p-3 rounded-xl bg-slate-50">
-          <span className="text-slate-400 font-medium">Total Current Value</span>
-          <p className="text-base font-bold font-mono text-slate-900 mt-1">
-            {formatINR(summary.totalCurrentValue)}
-          </p>
-        </div>
-        <div className="p-3 rounded-xl bg-slate-50">
-          <span className="text-slate-400 font-medium">Reference Capital</span>
-          <p className="text-base font-bold font-mono text-slate-700 mt-1">
-            {formatINR(summary.totalReferenceValue)}
-          </p>
-        </div>
-        <div className="p-3 rounded-xl bg-slate-50">
-          <span className="text-slate-400 font-medium">Total Difference (P&L)</span>
-          <p
-            className={`text-base font-bold font-mono mt-1 ${
-              summary.totalDifference >= 0 ? 'text-emerald-600' : 'text-rose-600'
-            }`}
-          >
-            {formatINR(summary.totalDifference, { showSign: true })}
-          </p>
-        </div>
-        <div className="p-3 rounded-xl bg-slate-50">
-          <span className="text-slate-400 font-medium">Total Return</span>
-          <div className="mt-1">
-            <StatBadge percentage={summary.percentageChange} size="sm" />
-          </div>
-        </div>
-      </div>
+      {/* Unified KPI Strip */}
+      <PortfolioKpiStrip
+        totalCurrentValue={summary.totalCurrentValue}
+        totalReferenceValue={summary.totalReferenceValue}
+        totalDifference={summary.totalDifference}
+        percentageChange={summary.percentageChange}
+      />
 
-      {/* Stock Details Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search holding name or ticker..."
-              className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-            />
-          </div>
-
-          <div className="text-xs text-slate-500 font-medium">
-            Recorded Holdings: <span className="font-bold text-slate-800">{rawStocks.length}</span>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
-              <tr>
-                <th
-                  onClick={() => handleSort('company')}
-                  className="py-3.5 px-6 cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>Company</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('shares')}
-                  className="py-3.5 px-6 text-right cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>Shares</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('currentValue')}
-                  className="py-3.5 px-6 text-right cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>Current Value</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('referenceValue')}
-                  className="py-3.5 px-6 text-right cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>Reference Value</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('difference')}
-                  className="py-3.5 px-6 text-right cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>Difference (P&L)</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('percentage')}
-                  className="py-3.5 px-6 text-right cursor-pointer hover:text-slate-900 transition-colors"
-                >
-                  <div className="flex items-center justify-end gap-1.5">
-                    <span>% Change</span>
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {processedStocks.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    {searchQuery ? `No holdings match "${searchQuery}"` : 'No holdings in this snapshot'}
-                  </td>
-                </tr>
-              ) : (
-                processedStocks.map((stock, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-4 px-6 font-semibold text-slate-900 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                        {stock.company.slice(0, 2).toUpperCase()}
-                      </div>
-                      <span className="truncate max-w-sm">{stock.company}</span>
-                    </td>
-                    <td className="py-4 px-6 text-right font-mono font-medium text-slate-700">
-                      {stock.shares.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-4 px-6 text-right font-mono font-bold text-slate-900">
-                      {formatINR(stock.currentValue)}
-                    </td>
-                    <td className="py-4 px-6 text-right font-mono text-slate-600">
-                      {formatINR(stock.referenceValue)}
-                    </td>
-                    <td
-                      className={`py-4 px-6 text-right font-mono font-semibold ${
-                        stock.difference >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {formatINR(stock.difference, { showSign: true })}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <StatBadge percentage={stock.percentage} size="sm" />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Unified Holdings Table */}
+      <HoldingsTable
+        stocks={rawStocks}
+        title="Snapshot Holdings Breakdown"
+        subtitle={`Recorded Holdings: ${rawStocks.length}`}
+        searchable
+        searchPlaceholder="Search holding name or ticker..."
+      />
     </div>
   );
 };

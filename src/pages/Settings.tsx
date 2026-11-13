@@ -1,18 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Server, Activity, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import {
-  Server,
-  Activity,
-  Trash2,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  ShieldCheck,
-  RefreshCw,
-  FileCode,
-} from 'lucide-react';
 import { portfolioService } from '../services/portfolio.service';
 import { useToast } from '../components/common/Toast';
+import { Modal } from '../components/common/Modal';
 import { PortfolioSnapshot } from '../types/portfolio.types';
 
 interface OutletContextType {
@@ -20,30 +11,57 @@ interface OutletContextType {
   refetch: () => Promise<void>;
 }
 
+type ServerStatus = 'checking' | 'up' | 'down';
+
 export const Settings: React.FC = () => {
   const { snapshots, refetch } = useOutletContext<OutletContextType>();
   const { success, error: toastError } = useToast();
 
-  const [checkingHealth, setCheckingHealth] = useState(false);
-  const [healthResult, setHealthResult] = useState<any>(null);
+  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
+  const [lastChecked, setLastChecked] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+  const checkServerStatus = useCallback(
+    async (notify = false) => {
+      try {
+        setServerStatus('checking');
+        const res = await portfolioService.healthCheck();
+        // Consider server up if response succeeded (JSON success/status or valid response payload)
+        const isUp =
+          res === undefined || res === null
+            ? false
+            : typeof res === 'string'
+            ? true
+            : res.success !== false;
 
-  const handleTestHealth = async () => {
-    try {
-      setCheckingHealth(true);
-      const res = await portfolioService.healthCheck();
-      setHealthResult(res);
-      success('API Online', 'Successfully connected to backend extraction engine.');
-    } catch (err: any) {
-      setHealthResult({ error: err.message || 'Failed to ping health check' });
-      toastError('API Unreachable', err.message);
-    } finally {
-      setCheckingHealth(false);
-    }
-  };
+        if (isUp) {
+          setServerStatus('up');
+          setLastChecked(new Date().toLocaleTimeString());
+          if (notify) {
+            success('Server Online', 'Portfolio backend server is up and responding.');
+          }
+        } else {
+          setServerStatus('down');
+          setLastChecked(new Date().toLocaleTimeString());
+          if (notify) {
+            toastError('Server Offline', 'Backend server returned an unhealthy status.');
+          }
+        }
+      } catch (err: any) {
+        setServerStatus('down');
+        setLastChecked(new Date().toLocaleTimeString());
+        if (notify) {
+          toastError('Server Unreachable', err.message || 'Unable to reach the server.');
+        }
+      }
+    },
+    [success, toastError]
+  );
+
+  useEffect(() => {
+    checkServerStatus(false);
+  }, [checkServerStatus]);
 
   const handleClearData = async () => {
     try {
@@ -62,163 +80,171 @@ export const Settings: React.FC = () => {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">System Settings & API</h2>
-        <p className="text-xs text-slate-500 mt-1">
-          Review backend endpoints, check live service health, and configure portfolio parameters.
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">System Settings</h2>
+        <p className="text-xs text-slate-600 mt-1">
+          Check live server availability and manage stored portfolio snapshots.
         </p>
       </div>
 
-      {/* Backend API Configuration */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      {/* Server Status Card */}
+      <section
+        aria-labelledby="server-status-heading"
+        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div
+              aria-hidden="true"
+              className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0"
+            >
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Backend API Configuration</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Centralized Axios communication layer
+              <h3 id="server-status-heading" className="text-base font-bold text-slate-900">
+                Server Status
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Live availability of the portfolio API service
               </p>
             </div>
           </div>
+
           <button
-            onClick={handleTestHealth}
-            disabled={checkingHealth}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-all border border-indigo-200 cursor-pointer disabled:opacity-50"
+            type="button"
+            onClick={() => checkServerStatus(true)}
+            disabled={serverStatus === 'checking'}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors border border-indigo-200 cursor-pointer disabled:opacity-50 self-start sm:self-auto"
           >
-            <Activity className={`w-3.5 h-3.5 ${checkingHealth ? 'animate-spin' : ''}`} />
-            {checkingHealth ? 'Pinging...' : 'Test Health (GET /)'}
+            <Activity
+              aria-hidden="true"
+              className={`w-3.5 h-3.5 ${serverStatus === 'checking' ? 'animate-spin' : ''}`}
+            />
+            <span>{serverStatus === 'checking' ? 'Checking...' : 'Check Status'}</span>
           </button>
         </div>
 
-        {/* Configuration details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-slate-400 font-medium">Base URL</span>
-            <p className="font-mono font-bold text-slate-800 mt-1 truncate">{apiBaseUrl}</p>
-            <p className="text-[11px] text-slate-400 mt-1">Configured via VITE_API_BASE_URL</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-slate-400 font-medium">Snapshot Indexing Timezone</span>
-            <p className="font-mono font-bold text-slate-800 mt-1">Asia/Kolkata (IST)</p>
-            <p className="text-[11px] text-slate-400 mt-1">One snapshot maintained per date</p>
-          </div>
-        </div>
-
-        {/* Health Check Result */}
-        {healthResult && (
-          <div
-            className={`p-4 rounded-xl border text-xs font-mono ${
-              healthResult.success
-                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800'
-                : 'bg-rose-50/70 border-rose-200 text-rose-800'
-            }`}
-          >
-            <div className="flex items-center gap-2 font-bold mb-1">
-              {healthResult.success ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600" />
-              )}
-              <span>Health Check Status</span>
-            </div>
-            <pre className="text-[11px] mt-2 whitespace-pre-wrap">
-              {JSON.stringify(healthResult, null, 2)}
-            </pre>
-          </div>
-        )}
-
-        {/* Endpoints Table */}
-        <div>
-          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-            Registered API Endpoints
-          </h4>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] border-b border-slate-200 font-sans">
-                <tr>
-                  <th className="py-2.5 px-4">Method</th>
-                  <th className="py-2.5 px-4">Endpoint</th>
-                  <th className="py-2.5 px-4 font-sans">Purpose</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[11px]">
-                <tr>
-                  <td className="py-2.5 px-4 font-bold text-blue-600">GET</td>
-                  <td className="py-2.5 px-4 text-slate-800">/</td>
-                  <td className="py-2.5 px-4 font-sans text-slate-600">Health check & Service status</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-4 font-bold text-emerald-600">POST</td>
-                  <td className="py-2.5 px-4 text-slate-800">/api/portfolio/extract</td>
-                  <td className="py-2.5 px-4 font-sans text-slate-600">Extract portfolio from image (multipart/form-data)</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-4 font-bold text-blue-600">GET</td>
-                  <td className="py-2.5 px-4 text-slate-800">/api/portfolio</td>
-                  <td className="py-2.5 px-4 font-sans text-slate-600">Retrieve all historical snapshots</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-4 font-bold text-blue-600">GET</td>
-                  <td className="py-2.5 px-4 text-slate-800">/api/portfolio/:date</td>
-                  <td className="py-2.5 px-4 font-sans text-slate-600">Retrieve date-specific snapshot (YYYY-MM-DD)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Database & Storage Management */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <Trash2 className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Database & Snapshot Management</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Currently holding{' '}
-              <span className="font-bold text-slate-800">{snapshots.length}</span> recorded snapshot
-              {snapshots.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-        </div>
-
-        <div className="pt-2">
-          {!showConfirmClear ? (
-            <button
-              onClick={() => setShowConfirmClear(true)}
-              className="px-4 py-2 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-xl transition-all cursor-pointer"
-            >
-              Reset All Snapshots
-            </button>
-          ) : (
-            <div className="p-4 rounded-xl bg-rose-50/80 border border-rose-200 space-y-3">
-              <p className="text-xs font-medium text-rose-900">
-                Are you sure? This will permanently delete all stored snapshot records from disk.
+        {/* Simple Up / Down Status Indicator */}
+        <div
+          role="status"
+          aria-live="polite"
+          className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+            serverStatus === 'up'
+              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+              : serverStatus === 'down'
+              ? 'bg-rose-50/70 border-rose-200 text-rose-900'
+              : 'bg-slate-50 border-slate-200 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {serverStatus === 'up' && (
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" aria-hidden="true" />
+            )}
+            {serverStatus === 'down' && (
+              <AlertCircle className="w-5 h-5 text-rose-700 flex-shrink-0" aria-hidden="true" />
+            )}
+            {serverStatus === 'checking' && (
+              <Activity
+                className="w-5 h-5 text-indigo-600 animate-spin flex-shrink-0"
+                aria-hidden="true"
+              />
+            )}
+            <div>
+              <p className="text-sm font-bold">
+                {serverStatus === 'up'
+                  ? 'Server is Up'
+                  : serverStatus === 'down'
+                  ? 'Server is Down'
+                  : 'Checking Server Status...'}
               </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleClearData}
-                  disabled={isClearing}
-                  className="px-4 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors cursor-pointer"
-                >
-                  {isClearing ? 'Deleting...' : 'Yes, Delete All Data'}
-                </button>
-                <button
-                  onClick={() => setShowConfirmClear(false)}
-                  className="px-4 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
+              <p className="text-xs opacity-80 mt-0.5">
+                {serverStatus === 'up'
+                  ? 'The portfolio API is online and responding normally.'
+                  : serverStatus === 'down'
+                  ? 'The portfolio API is currently unreachable.'
+                  : 'Verifying connection to the backend service...'}
+              </p>
             </div>
+          </div>
+
+          {lastChecked && serverStatus !== 'checking' && (
+            <span className="text-xs font-medium opacity-75 whitespace-nowrap">
+              Last checked: {lastChecked}
+            </span>
           )}
         </div>
-      </div>
+      </section>
+
+      {/* Database & Storage Management */}
+      <section
+        aria-labelledby="storage-heading"
+        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              aria-hidden="true"
+              className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0"
+            >
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 id="storage-heading" className="text-base font-bold text-slate-900">
+                Database &amp; Snapshot Management
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Currently holding{' '}
+                <span className="font-bold text-slate-900">{snapshots.length}</span> recorded
+                snapshot{snapshots.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowConfirmClear(true)}
+            disabled={snapshots.length === 0}
+            className="px-4 py-2 min-h-[40px] bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed self-start sm:self-auto"
+          >
+            Reset All Snapshots
+          </button>
+        </div>
+      </section>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmClear}
+        onClose={() => !isClearing && setShowConfirmClear(false)}
+        title="Confirm Snapshot Reset"
+        titleId="confirm-reset-title"
+        maxWidthClass="max-w-md"
+        icon={<Trash2 className="w-5 h-5 text-rose-600" aria-hidden="true" />}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowConfirmClear(false)}
+              disabled={isClearing}
+              className="px-4 py-2 min-h-[40px] bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleClearData}
+              disabled={isClearing}
+              className="px-4 py-2 min-h-[40px] bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isClearing ? 'Deleting...' : 'Yes, Delete All Data'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Are you sure you want to delete all{' '}
+          <span className="font-semibold text-slate-900">{snapshots.length}</span> stored
+          portfolio snapshot{snapshots.length !== 1 ? 's' : ''}? This action cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 };

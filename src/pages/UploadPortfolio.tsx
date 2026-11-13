@@ -5,18 +5,16 @@ import {
   FileImage,
   X,
   CheckCircle2,
-  AlertCircle,
   Loader2,
   ArrowRight,
-  TrendingUp,
   Sparkles,
   ShieldAlert,
 } from 'lucide-react';
 import { portfolioService } from '../services/portfolio.service';
 import { PortfolioStock, PortfolioSnapshot } from '../types/portfolio.types';
-import { formatINR } from '../utils/currency';
-import { calculateDifference, calculatePercentageChange } from '../utils/calculations';
-import { StatBadge } from '../components/common/StatBadge';
+import { calculateStockSummary } from '../utils/calculations';
+import { HoldingsTable } from '../components/portfolio/HoldingsTable';
+import { PortfolioKpiStrip } from '../components/portfolio/PortfolioKpiStrip';
 import { useToast } from '../components/common/Toast';
 
 interface OutletContextType {
@@ -47,16 +45,16 @@ export const UploadPortfolio: React.FC = () => {
     setErrorMessage(null);
     setExtractedStocks(null);
 
-    // Validate type
     if (!ALLOWED_TYPES.includes(file.type)) {
       setErrorMessage('Unsupported format. Please upload a JPEG, PNG, or WebP image.');
       toastError('Invalid Format', 'Please upload a JPEG, PNG, or WebP image.');
       return;
     }
 
-    // Validate size (10 MB)
     if (file.size > MAX_FILE_SIZE) {
-      setErrorMessage(`File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 10 MB maximum limit.`);
+      setErrorMessage(
+        `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 10 MB maximum limit.`
+      );
       toastError('File Too Large', 'Maximum file size allowed is 10 MB.');
       return;
     }
@@ -123,7 +121,6 @@ export const UploadPortfolio: React.FC = () => {
           'Extraction Successful',
           `Successfully extracted ${result.data.length} stocks and indexed today's snapshot.`
         );
-        // Refresh snapshots in global context
         await refetch();
       } else {
         throw new Error(result.message || 'No valid stocks could be extracted.');
@@ -139,7 +136,6 @@ export const UploadPortfolio: React.FC = () => {
     }
   };
 
-  // Helper: Generate a realistic sample Zerodha Kite / Groww holding screenshot
   const handleLoadSampleScreenshot = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 1100;
@@ -147,11 +143,9 @@ export const UploadPortfolio: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Header bar
     ctx.fillStyle = '#387ed1';
     ctx.fillRect(0, 0, canvas.width, 60);
 
@@ -159,7 +153,6 @@ export const UploadPortfolio: React.FC = () => {
     ctx.font = 'bold 20px sans-serif';
     ctx.fillText('Zerodha Kite • Holdings (5)', 24, 38);
 
-    // Summary box
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(24, 80, canvas.width - 48, 80);
     ctx.strokeStyle = '#e2e8f0';
@@ -179,7 +172,6 @@ export const UploadPortfolio: React.FC = () => {
     ctx.fillStyle = '#16a34a';
     ctx.fillText('+₹ 69,320.00 (+10.12%)', 650, 142);
 
-    // Table Header
     ctx.fillStyle = '#f1f5f9';
     ctx.fillRect(24, 180, canvas.width - 48, 40);
 
@@ -190,7 +182,6 @@ export const UploadPortfolio: React.FC = () => {
     ctx.fillText('CURRENT VALUE', 580, 205);
     ctx.fillText('REFERENCE / INVESTED', 820, 205);
 
-    // Sample rows
     const rows = [
       { name: 'Tata Consultancy Services Ltd. (TCS)', qty: '50', cur: '₹ 2,04,500.00', ref: '₹ 1,90,000.00' },
       { name: 'Reliance Industries Ltd. (RELIANCE)', qty: '80', cur: '₹ 2,36,000.00', ref: '₹ 2,16,000.00' },
@@ -231,6 +222,8 @@ export const UploadPortfolio: React.FC = () => {
     }, 'image/png');
   };
 
+  const extractedSummary = extractedStocks ? calculateStockSummary(extractedStocks) : null;
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Page Title */}
@@ -238,84 +231,99 @@ export const UploadPortfolio: React.FC = () => {
         <h2 className="text-xl font-bold text-slate-900 tracking-tight">
           Upload Portfolio Screenshot
         </h2>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
           Upload a clear screenshot of your stock broker portfolio (Zerodha, Groww, Upstox, Angel
-          One, or any broker). The backend API will automatically extract holdings, shares, and
-          valuations.
+          One, or any broker). Holdings are extracted automatically and indexed in Asia/Kolkata
+          timezone.
         </p>
       </div>
 
       {/* Main Upload Card */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs">
-        {/* Drop Zone */}
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-5">
         {!selectedFile ? (
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
-              isDragging
-                ? 'border-indigo-600 bg-indigo-50/50'
-                : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50'
-            }`}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileSelection(e.target.files[0]);
+          <>
+            {/* Keyboard-accessible Drop Zone */}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Upload portfolio screenshot by clicking or dropping a file"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
                 }
               }}
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-            />
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 shadow-xs">
-              <UploadCloud className="w-8 h-8" />
-            </div>
-            <h3 className="text-base font-semibold text-slate-900 mb-1">
-              Drag & Drop your portfolio screenshot here
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              or <span className="text-indigo-600 font-semibold underline">browse files</span> from
-              your computer
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-400">
-              <span className="px-2 py-0.5 rounded bg-slate-100 font-medium">JPEG</span>
-              <span className="px-2 py-0.5 rounded bg-slate-100 font-medium">PNG</span>
-              <span className="px-2 py-0.5 rounded bg-slate-100 font-medium">WebP</span>
-              <span>• Max file size: 10 MB</span>
+              className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center transition-colors cursor-pointer flex flex-col items-center justify-center ${
+                isDragging
+                  ? 'border-indigo-600 bg-indigo-50/50'
+                  : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50'
+              }`}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileSelection(e.target.files[0]);
+                  }
+                }}
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+              />
+              <div
+                aria-hidden="true"
+                className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 shadow-xs"
+              >
+                <UploadCloud className="w-8 h-8" />
+              </div>
+              <h3 className="text-base font-semibold text-slate-900 mb-1">
+                Drag & Drop your portfolio screenshot here
+              </h3>
+              <p className="text-xs text-slate-600 mb-4">
+                or <span className="text-indigo-700 font-semibold underline">browse files</span>{' '}
+                from your computer
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-600">
+                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">JPEG</span>
+                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">PNG</span>
+                <span className="px-2.5 py-0.5 rounded-md bg-slate-100 font-medium">WebP</span>
+                <span>• Max file size: 10 MB</span>
+              </div>
             </div>
 
-            {/* Quick Test Preset Button */}
-            <div className="mt-6 pt-6 border-t border-slate-200/60 w-full max-w-md">
+            {/* Separate secondary sample action (prevents nested clickable conflict) */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100">
+              <p className="text-xs text-slate-500">
+                Want to preview extraction without a screenshot?
+              </p>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLoadSampleScreenshot();
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition-all border border-indigo-200 cursor-pointer"
+                onClick={handleLoadSampleScreenshot}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition-colors border border-indigo-200 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-indigo-600" />
-                Load Sample Brokerage Screenshot (Instant Test)
+                <Sparkles className="w-4 h-4 text-indigo-600" aria-hidden="true" />
+                Load Sample Brokerage Screenshot
               </button>
             </div>
-          </div>
+          </>
         ) : (
           /* File Selected & Preview Mode */
           <div className="space-y-6">
-            <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+                <div
+                  aria-hidden="true"
+                  className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0"
+                >
                   <FileImage className="w-6 h-6" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 truncate">
-                    {selectedFile.name}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <h4 className="text-xs font-bold text-slate-900 truncate">{selectedFile.name}</h4>
+                  <p className="text-xs text-slate-600 font-mono mt-0.5">
                     {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type}
                   </p>
                 </div>
@@ -323,11 +331,13 @@ export const UploadPortfolio: React.FC = () => {
 
               {!isExtracting && (
                 <button
+                  type="button"
                   onClick={handleRemoveImage}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-white transition-colors cursor-pointer"
+                  aria-label="Remove selected image"
                   title="Remove selected image"
+                  className="p-2 text-slate-500 hover:text-rose-700 rounded-xl hover:bg-white transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -337,42 +347,52 @@ export const UploadPortfolio: React.FC = () => {
               <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-h-96 flex items-center justify-center bg-slate-900/5">
                 <img
                   src={previewUrl}
-                  alt="Portfolio preview"
+                  alt={`Preview of ${selectedFile.name}`}
                   className="w-full h-auto object-contain max-h-96 rounded-2xl"
                 />
               </div>
             )}
 
-            {/* Progress Bar (when extracting) */}
+            {/* Progress Bar */}
             {isExtracting && (
-              <div className="space-y-2 p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+              <div
+                role="status"
+                aria-live="polite"
+                className="space-y-2 p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200"
+              >
                 <div className="flex items-center justify-between text-xs font-semibold text-indigo-900">
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-600" aria-hidden="true" />
                     {extractionStep || 'Processing screenshot...'}
                   </span>
-                  <span>{uploadProgress}%</span>
+                  <span className="font-mono">{uploadProgress}%</span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-indigo-100 overflow-hidden">
+                <div
+                  role="progressbar"
+                  aria-valuenow={uploadProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="w-full h-2.5 rounded-full bg-indigo-100 overflow-hidden"
+                >
                   <div
                     className="h-full bg-indigo-600 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-[11px] text-indigo-700 mt-1">
+                <p className="text-xs text-indigo-800 mt-1">
                   Extracting company names, quantities, market values, and invested amounts...
                 </p>
               </div>
             )}
 
-            {/* Upload Button */}
+            {/* Action Buttons */}
             {!extractedStocks && (
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={handleRemoveImage}
                   disabled={isExtracting}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 min-h-[42px] rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -380,17 +400,17 @@ export const UploadPortfolio: React.FC = () => {
                   type="button"
                   onClick={handleUploadAndExtract}
                   disabled={isExtracting}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 min-h-[42px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {isExtracting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Extracting Holdings...
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                      <span>Extracting Holdings...</span>
                     </>
                   ) : (
                     <>
-                      <UploadCloud className="w-4 h-4" />
-                      Extract Portfolio Holdings
+                      <UploadCloud className="w-4 h-4" aria-hidden="true" />
+                      <span>Extract Portfolio Holdings</span>
                     </>
                   )}
                 </button>
@@ -399,10 +419,13 @@ export const UploadPortfolio: React.FC = () => {
           </div>
         )}
 
-        {/* Error Notification Alert */}
+        {/* Error Alert */}
         {errorMessage && (
-          <div className="mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-800">
-            <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+          <div
+            role="alert"
+            className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-900"
+          >
+            <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="text-xs">
               <h4 className="font-bold">Extraction Error</h4>
               <p className="mt-0.5 leading-relaxed">{errorMessage}</p>
@@ -411,89 +434,60 @@ export const UploadPortfolio: React.FC = () => {
         )}
       </div>
 
-      {/* Extracted Stocks Table & Results (Shown after success) */}
-      {extractedStocks && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden animate-in fade-in-50 duration-300">
-          <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-emerald-50/40">
+      {/* Extracted Stocks Summary & Table */}
+      {extractedStocks && extractedSummary && (
+        <div className="space-y-6">
+          <div className="bg-emerald-50/70 p-6 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+              <div
+                aria-hidden="true"
+                className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0"
+              >
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900">
                   Extraction Complete: {extractedStocks.length} Stocks Detected
                 </h3>
-                <p className="text-xs text-slate-600 mt-0.5">
+                <p className="text-xs text-slate-700 mt-0.5">
                   Portfolio snapshot indexed in Asia/Kolkata timezone.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
-                onClick={() => {
-                  handleRemoveImage();
-                }}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all cursor-pointer"
+                type="button"
+                onClick={handleRemoveImage}
+                className="px-4 py-2 min-h-[40px] rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
               >
                 Upload Another
               </button>
               <button
+                type="button"
                 onClick={() => navigate('/')}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
-                Go to Dashboard
-                <ArrowRight className="w-4 h-4" />
+                <span>Go to Dashboard</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-6">Company / Asset</th>
-                  <th className="py-3 px-6 text-right">Shares</th>
-                  <th className="py-3 px-6 text-right">Current Value</th>
-                  <th className="py-3 px-6 text-right">Reference Value</th>
-                  <th className="py-3 px-6 text-right">Difference (P&L)</th>
-                  <th className="py-3 px-6 text-right">% Change</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {extractedStocks.map((stock, idx) => {
-                  const diff = calculateDifference(stock.currentValue, stock.referenceValue);
-                  const pct = calculatePercentageChange(stock.currentValue, stock.referenceValue);
-                  return (
-                    <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-6 font-semibold text-slate-900">
-                        {stock.company}
-                      </td>
-                      <td className="py-3.5 px-6 text-right font-mono text-slate-700">
-                        {stock.shares}
-                      </td>
-                      <td className="py-3.5 px-6 text-right font-mono font-bold text-slate-900">
-                        {formatINR(stock.currentValue)}
-                      </td>
-                      <td className="py-3.5 px-6 text-right font-mono text-slate-600">
-                        {formatINR(stock.referenceValue)}
-                      </td>
-                      <td
-                        className={`py-3.5 px-6 text-right font-mono font-semibold ${
-                          diff >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                        }`}
-                      >
-                        {formatINR(diff, { showSign: true })}
-                      </td>
-                      <td className="py-3.5 px-6 text-right">
-                        <StatBadge percentage={pct} size="sm" />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <PortfolioKpiStrip
+            totalCurrentValue={extractedSummary.totalCurrentValue}
+            totalReferenceValue={extractedSummary.totalReferenceValue}
+            totalDifference={extractedSummary.totalDifference}
+            percentageChange={extractedSummary.percentageChange}
+          />
+
+          <HoldingsTable
+            stocks={extractedStocks}
+            title="Extracted Portfolio Holdings"
+            subtitle={`Extracted ${extractedStocks.length} position${
+              extractedStocks.length === 1 ? '' : 's'
+            } from screenshot`}
+          />
         </div>
       )}
     </div>
