@@ -89,28 +89,6 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </button>
         )}
-
-        {/* Divider */}
-        <div className="h-6 w-px bg-[var(--border-default)] hidden sm:block" aria-hidden="true" />
-
-        {/* User Profile Placeholder */}
-        <div className="flex items-center gap-2.5 pl-0.5">
-          <div
-            aria-hidden="true"
-            className="w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-[var(--border-default)] text-[var(--accent-primary)] flex items-center justify-center font-bold text-xs"
-          >
-            IN
-          </div>
-          <div className="hidden lg:flex flex-col text-left">
-            <span className="text-xs font-semibold text-[var(--text-primary)] leading-tight">
-              Investor Portfolio
-            </span>
-            <span className="text-[11px] text-[var(--status-success)] font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)]" aria-hidden="true" />
-              Verified API Link
-            </span>
-          </div>
-        </div>
       </div>
     </header>
   );
