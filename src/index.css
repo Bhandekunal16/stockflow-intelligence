@@ -8,6 +8,7 @@
   --bg-canvas: #18181B;
   --bg-sidebar: #09090B;
   --bg-card: #27272A;
+  --bg-kpi: #1C1C21;
   --bg-elevated: #3F3F46;
 
   --accent-primary: #A78BFA;
@@ -22,6 +23,7 @@
   --text-primary: #FAFAFA;
   --text-secondary: #A1A1AA;
   --border-default: #3F3F46;
+  --border-kpi: #27272A;
 }
 
 @layer base {

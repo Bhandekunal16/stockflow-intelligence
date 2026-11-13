@@ -1,6 +1,15 @@
 import React from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { Activity, TrendingUp, UploadCloud } from 'lucide-react';
+import {
+  Activity,
+  TrendingUp,
+  UploadCloud,
+  Wallet,
+  PiggyBank,
+  ArrowUpRight,
+  ArrowDownRight,
+  Layers,
+} from 'lucide-react';
 import { PortfolioSnapshot } from '../types/portfolio.types';
 import { AllocationLineChart } from '../components/charts/AllocationLineChart';
 import { CurrentVsRefLineChart } from '../components/charts/CurrentVsRefLineChart';
@@ -9,6 +18,7 @@ import { PerformanceChart } from '../components/dashboard/PerformanceChart';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { KpiCard } from '../components/common/KpiCard';
 import { calculateStockSummary } from '../utils/calculations';
 import { formatINR, formatPercentage } from '../utils/currency';
 import { formatDate } from '../utils/date';
@@ -58,6 +68,10 @@ export const Analytics: React.FC = () => {
 
   const summary = calculateStockSummary(stocks);
   const isPositive = summary.totalDifference >= 0;
+  const formattedCurrent = formatINR(summary.totalCurrentValue);
+  const formattedReference = formatINR(summary.totalReferenceValue);
+  const formattedDiff = formatINR(summary.totalDifference, { showSign: true });
+  const formattedPct = formatPercentage(summary.percentageChange);
 
   return (
     <div className="space-y-8">
@@ -81,58 +95,50 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Snapshot High-Level Stat Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[var(--bg-card)] p-5 rounded-2xl border border-[var(--border-default)]">
-        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
-          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Active Valuation
-          </span>
-          <h3 className="text-xl font-bold font-mono text-[var(--accent-primary)] mt-1">
-            {formatINR(summary.totalCurrentValue)}
-          </h3>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-            Snapshot: {formatDate(latestSnapshot?.date, 'DD MMM YYYY')}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <KpiCard
+          title="Active Valuation"
+          value={formattedCurrent}
+          description={`Snapshot: ${formatDate(latestSnapshot?.date, 'DD MMM YYYY')}`}
+          icon={Wallet}
+          accent="violet"
+          tooltip={`Active Valuation: ${formattedCurrent}`}
+        />
 
-        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
-          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Invested Capital
-          </span>
-          <h3 className="text-xl font-bold font-mono text-[var(--text-primary)] mt-1">
-            {formatINR(summary.totalReferenceValue)}
-          </h3>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Reference cost basis</p>
-        </div>
+        <KpiCard
+          title="Invested Capital"
+          value={formattedReference}
+          description="Reference cost basis"
+          icon={PiggyBank}
+          accent="gray"
+          tooltip={`Invested Capital: ${formattedReference}`}
+        />
 
-        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
-          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Overall Unrealized Return
-          </span>
-          <h3
-            className={`text-xl font-bold font-mono mt-1 ${
-              isPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'
-            }`}
-          >
-            {formatINR(summary.totalDifference, { showSign: true })}
-          </h3>
-          <p
-            className={`text-xs font-semibold font-mono mt-0.5 ${
-              isPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'
-            }`}
-          >
-            {formatPercentage(summary.percentageChange)} total return
-          </p>
-        </div>
+        <KpiCard
+          title="Overall Unrealized Return"
+          value={formattedDiff}
+          description={
+            <span>
+              <span className={isPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-error)]'}>
+                {formattedPct}
+              </span>{' '}
+              <span>total return</span>
+            </span>
+          }
+          icon={isPositive ? ArrowUpRight : ArrowDownRight}
+          accent={isPositive ? 'green' : 'red'}
+          tooltip={`Overall Unrealized Return: ${formattedDiff} (${formattedPct})`}
+        />
 
-        <div className="p-3 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border-default)]">
-          <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-            Diversification
-          </span>
-          <h3 className="text-xl font-bold font-mono text-[var(--text-primary)] mt-1">
-            {stocks.length} Holdings
-          </h3>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">Individual asset positions</p>
-        </div>
+        <KpiCard
+          title="Diversification"
+          value={stocks.length}
+          description="Individual active positions"
+          icon={Layers}
+          accent="amber"
+          to="/holdings"
+          tooltip="View individual holdings"
+        />
       </div>
 
       {/* Top 2 Visual Line Charts: Allocation Trajectory & Current vs Reference */}
