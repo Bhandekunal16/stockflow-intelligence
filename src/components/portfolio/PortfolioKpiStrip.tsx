@@ -69,6 +69,7 @@ export const PortfolioKpiStrip: React.FC<PortfolioKpiStripProps> = ({
         description={isPositive ? 'Net unrealized gain' : 'Net unrealized drawdown'}
         icon={isPositive ? ArrowUpRight : ArrowDownRight}
         accent={isPositive ? 'green' : 'red'}
+        valueTone={totalDifference > 0 ? 'success' : totalDifference < 0 ? 'error' : 'default'}
         tooltip={`Net Profit / Loss: ${formattedDiff}`}
       />
 
@@ -78,6 +79,7 @@ export const PortfolioKpiStrip: React.FC<PortfolioKpiStripProps> = ({
         description="Return over reference capital"
         icon={returnIcon}
         accent={returnAccent}
+        valueTone={isReturnPositive ? 'success' : isReturnNegative ? 'error' : 'default'}
         tooltip={`Total Return: ${formattedPct}`}
       />
     </div>

@@ -127,6 +127,7 @@ export const Analytics: React.FC = () => {
           }
           icon={isPositive ? ArrowUpRight : ArrowDownRight}
           accent={isPositive ? 'green' : 'red'}
+          valueTone={summary.totalDifference > 0 ? 'success' : summary.totalDifference < 0 ? 'error' : 'default'}
           tooltip={`Overall Unrealized Return: ${formattedDiff} (${formattedPct})`}
         />
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 
 export type KpiAccent = 'violet' | 'green' | 'gray' | 'amber' | 'red';
+export type KpiValueTone = 'default' | 'success' | 'error';
 
 interface KpiCardProps {
   title: string;
@@ -10,6 +11,7 @@ interface KpiCardProps {
   description: React.ReactNode;
   icon: LucideIcon;
   accent?: KpiAccent;
+  valueTone?: KpiValueTone;
   tooltip?: string;
   to?: string;
   onClick?: () => void;
@@ -24,12 +26,19 @@ const ACCENT_STYLES: Record<KpiAccent, string> = {
   red: 'bg-[#F87171]/10 border-[#F87171]/25 text-[#F87171]',
 };
 
+const VALUE_TONE_STYLES: Record<KpiValueTone, string> = {
+  default: 'text-[var(--text-primary)]',
+  success: 'text-[var(--status-success)]',
+  error: 'text-[var(--status-error)]',
+};
+
 export const KpiCard: React.FC<KpiCardProps> = ({
   title,
   value,
   description,
   icon: Icon,
   accent = 'violet',
+  valueTone = 'default',
   tooltip,
   to,
   onClick,
@@ -67,7 +76,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       {/* Middle section: Large, bold metric value */}
       <div className="mt-3">
         <div
-          className="text-[24px] leading-tight font-bold text-[var(--text-primary)] tabular-nums tracking-tight truncate"
+          className={`text-[24px] leading-tight font-bold ${VALUE_TONE_STYLES[valueTone]} tabular-nums tracking-tight truncate`}
           title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}
         >
           {value}

@@ -65,6 +65,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ metrics }) => {
         }
         icon={isProfit ? ArrowUpRight : ArrowDownRight}
         accent={isProfit ? 'green' : 'red'}
+        valueTone={totalDifference > 0 ? 'success' : totalDifference < 0 ? 'error' : 'default'}
         tooltip={`Net P&L: ${formattedDiff} (${formattedPct})`}
       />
 
