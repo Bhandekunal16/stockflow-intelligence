@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, ChartLine, Percent } from 'lucide-react';
 import { PortfolioSnapshot, PortfolioStock } from '../../types/portfolio.types';
 import { formatINR, formatCompactINR, formatPercentage } from '../../utils/currency';
 import { formatDate, formatDateTime } from '../../utils/date';
@@ -184,31 +184,45 @@ export const AllocationLineChart: React.FC<AllocationLineChartProps> = ({
           <div
             role="group"
             aria-label="Allocation line chart view"
-            className="flex items-center bg-[var(--bg-canvas)] border border-[var(--border-default)] p-1 rounded-xl self-start sm:self-auto"
+            className="flex items-center gap-0.5 bg-[var(--bg-canvas)] border border-[var(--border-default)] p-1 rounded-xl self-start sm:self-auto"
           >
             <button
               type="button"
+              aria-label="Over Time"
               aria-pressed={activeMode === 'timeline'}
               onClick={() => setViewMode('timeline')}
-              className={`px-2.5 py-1 min-h-[32px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+              className={`group relative px-2.5 py-1 min-h-[32px] min-w-[34px] flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC] ${
                 activeMode === 'timeline'
-                  ? 'bg-[var(--bg-elevated)] text-[var(--accent-primary)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[#C084FC]/15 text-[#C084FC]'
+                  : 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[var(--bg-elevated)]/40'
               }`}
             >
-              Over Time
+              <ChartLine className="w-4 h-4 transition-transform duration-150" aria-hidden="true" />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 px-2 py-1 rounded-md bg-[var(--bg-sidebar)] border border-[var(--border-default)] text-[11px] font-medium text-[var(--text-primary)] whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150 z-20"
+              >
+                Over Time
+              </span>
             </button>
             <button
               type="button"
+              aria-label="Weight Percentage"
               aria-pressed={activeMode === 'weights'}
               onClick={() => setViewMode('weights')}
-              className={`px-2.5 py-1 min-h-[32px] text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+              className={`group relative px-2.5 py-1 min-h-[32px] min-w-[34px] flex items-center justify-center rounded-lg transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC] ${
                 activeMode === 'weights'
-                  ? 'bg-[var(--bg-elevated)] text-[var(--accent-primary)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[#C084FC]/15 text-[#C084FC]'
+                  : 'text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[var(--bg-elevated)]/40'
               }`}
             >
-              Weight %
+              <Percent className="w-4 h-4 transition-transform duration-150" aria-hidden="true" />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 px-2 py-1 rounded-md bg-[var(--bg-sidebar)] border border-[var(--border-default)] text-[11px] font-medium text-[var(--text-primary)] whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150 z-20"
+              >
+                Weight Percentage
+              </span>
             </button>
           </div>
         )}
