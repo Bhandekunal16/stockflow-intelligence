@@ -18,6 +18,10 @@ const PORT = Number(process.env.PORT) || 3000;
 const TARGET_API_URL = process.env.API_BACKEND_URL || 'http://147.224.251.137:8003';
 const SIGNALS_API_BASE_URL =
   process.env.SIGNALS_API_BASE_URL || 'https://stock-up-agent.vercel.app';
+const SCREENER_API_BASE_URL =
+  process.env.SCREENER_API_BASE_URL ||
+  process.env.SIGNALS_API_BASE_URL ||
+  'https://stock-up-agent.vercel.app';
 
 // Data persistence file setup for fallback
 const DATA_DIR = path.join(__dirname, 'data');
@@ -200,6 +204,147 @@ app.get('/api/portfolio/signals', async (req: Request, res: Response) => {
       success: false,
       message: err?.message || 'Failed to execute portfolio signals',
     });
+  } finally {
+    req.off('close', handleClose);
+  }
+});
+
+// GET /api/screener/snapshot - Proxy stock snapshot request to Vercel backend
+app.get('/api/screener/snapshot', async (req: Request, res: Response) => {
+  const controller = new AbortController();
+  const handleClose = () => {
+    if (!res.writableEnded) {
+      controller.abort();
+    }
+  };
+  req.on('close', handleClose);
+
+  try {
+    const params = new URLSearchParams();
+    if (typeof req.query.company === 'string' && req.query.company.trim()) {
+      params.set('company', req.query.company.trim().toUpperCase());
+    }
+    const qs = params.toString();
+    const targetUrl = `${SCREENER_API_BASE_URL}/api/screener/snapshot${qs ? `?${qs}` : ''}`;
+
+    const upstreamRes = await fetch(targetUrl, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+
+    const rawText = await upstreamRes.text();
+    try {
+      const parsed = JSON.parse(rawText);
+      return res.status(upstreamRes.status).json(parsed);
+    } catch {
+      return res.status(upstreamRes.status >= 400 ? upstreamRes.status : 502).json({
+        success: false,
+        message: 'Invalid JSON response received from Screener Snapshot API',
+        error: rawText.slice(0, 500),
+      });
+    }
+  } catch (err: any) {
+    if (err?.name === 'AbortError') return;
+    console.error('Screener Snapshot API proxy error:', err);
+    return res.status(502).json({
+      success: false,
+      message: err?.message || 'Unable to reach Screener Snapshot API',
+    });
+  } finally {
+    req.off('close', handleClose);
+  }
+});
+
+// GET /api/screener/stream - Stream NDJSON stock snapshots from Vercel backend without buffering
+app.get('/api/screener/stream', async (req: Request, res: Response) => {
+  req.setTimeout(0);
+  res.setTimeout(0);
+
+  const controller = new AbortController();
+  const handleClose = () => {
+    controller.abort();
+  };
+  req.on('close', handleClose);
+
+  try {
+    const params = new URLSearchParams();
+    if (typeof req.query.company === 'string' && req.query.company.trim()) {
+      params.set('company', req.query.company.trim().toUpperCase());
+    }
+    if (typeof req.query.every === 'string' && req.query.every.trim()) {
+      params.set('every', req.query.every.trim());
+    }
+    const qs = params.toString();
+    const targetUrl = `${SCREENER_API_BASE_URL}/api/screener/stream${qs ? `?${qs}` : ''}`;
+
+    const upstreamRes = await fetch(targetUrl, {
+      method: 'GET',
+      headers: { Accept: 'application/x-ndjson, application/json' },
+      signal: controller.signal,
+    });
+
+    if (!upstreamRes.ok) {
+      const errText = await upstreamRes.text();
+      try {
+        const parsed = JSON.parse(errText);
+        return res.status(upstreamRes.status).json(parsed);
+      } catch {
+        return res.status(upstreamRes.status).json({
+          success: false,
+          message: errText.slice(0, 500) || `Screener stream error (HTTP ${upstreamRes.status})`,
+        });
+      }
+    }
+
+    if (!upstreamRes.body) {
+      return res.status(502).json({
+        success: false,
+        message: 'Upstream stream body is unavailable',
+      });
+    }
+
+    res.status(200);
+    res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
+
+    const reader = upstreamRes.body.getReader();
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value && value.length > 0 && !res.writableEnded) {
+          res.write(Buffer.from(value));
+        }
+      }
+    } finally {
+      reader.releaseLock();
+      if (!res.writableEnded) {
+        res.end();
+      }
+    }
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      if (!res.writableEnded) {
+        res.end();
+      }
+      return;
+    }
+    console.error('Screener Stream API proxy error:', err);
+    if (!res.headersSent) {
+      return res.status(502).json({
+        success: false,
+        message: err?.message || 'Unable to connect to Screener Stream API',
+      });
+    }
+    if (!res.writableEnded) {
+      res.end();
+    }
   } finally {
     req.off('close', handleClose);
   }

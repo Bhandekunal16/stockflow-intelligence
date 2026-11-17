@@ -11,6 +11,7 @@ import {
   ChevronRight,
   TrendingUp,
   Radio,
+  Search,
   X,
 } from 'lucide-react';
 
@@ -54,6 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Portfolio History', to: '/history', icon: History },
     { name: 'Analytics', to: '/analytics', icon: Activity },
     { name: 'Portfolio Signals', to: '/portfolio-signals', icon: Radio },
+    { name: 'Live Screener', to: '/screener', icon: Search },
     { name: 'Settings', to: '/settings', icon: Settings },
   ];
 

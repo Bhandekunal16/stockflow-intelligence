@@ -9,6 +9,7 @@ import { PortfolioHistory } from './pages/PortfolioHistory';
 import { PortfolioDetails } from './pages/PortfolioDetails';
 import { Analytics } from './pages/Analytics';
 import { PortfolioSignals } from './pages/PortfolioSignals';
+import { ScreenerDashboard } from './pages/ScreenerDashboard';
 import { Settings } from './pages/Settings';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="history/:date" element={<PortfolioDetails />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="portfolio-signals" element={<PortfolioSignals />} />
+            <Route path="screener" element={<ScreenerDashboard />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
