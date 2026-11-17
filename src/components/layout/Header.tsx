@@ -27,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
     }
     if (path.startsWith('/history')) return { title: 'Portfolio History', crumb: 'Historical Snapshots' };
     if (path.startsWith('/analytics')) return { title: 'Portfolio Analytics', crumb: 'Visual Reports' };
+    if (path.startsWith('/portfolio-signals')) return { title: 'Portfolio Signals', crumb: 'Signal Generation' };
     if (path.startsWith('/settings')) return { title: 'Settings', crumb: 'Configuration' };
     return { title: 'Portfolio', crumb: 'Overview' };
   };

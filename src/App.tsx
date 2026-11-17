@@ -8,6 +8,7 @@ import { Holdings } from './pages/Holdings';
 import { PortfolioHistory } from './pages/PortfolioHistory';
 import { PortfolioDetails } from './pages/PortfolioDetails';
 import { Analytics } from './pages/Analytics';
+import { PortfolioSignals } from './pages/PortfolioSignals';
 import { Settings } from './pages/Settings';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="history" element={<PortfolioHistory />} />
             <Route path="history/:date" element={<PortfolioDetails />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="portfolio-signals" element={<PortfolioSignals />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

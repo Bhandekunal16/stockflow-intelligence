@@ -12,10 +12,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Upstream portfolio API backend URL
 const TARGET_API_URL = process.env.API_BACKEND_URL || 'http://147.224.251.137:8003';
+const SIGNALS_API_BASE_URL =
+  process.env.SIGNALS_API_BASE_URL || 'https://stock-up-agent.vercel.app';
 
 // Data persistence file setup for fallback
 const DATA_DIR = path.join(__dirname, 'data');
@@ -155,6 +157,51 @@ app.get('/api/portfolio', async (_req: Request, res: Response) => {
       count: sorted.length,
       data: sorted,
     });
+  }
+});
+
+// GET /api/portfolio/signals - Proxy to Vercel Portfolio Signals API (registered before /:date)
+app.get('/api/portfolio/signals', async (req: Request, res: Response) => {
+  const controller = new AbortController();
+  const handleClose = () => {
+    if (!res.writableEnded) {
+      controller.abort();
+    }
+  };
+  req.on('close', handleClose);
+
+  try {
+    const upstreamRes = await fetch(`${SIGNALS_API_BASE_URL}/api/portfolio/signals`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    const rawText = await upstreamRes.text();
+    try {
+      const parsed = JSON.parse(rawText);
+      return res.status(upstreamRes.status).json(parsed);
+    } catch {
+      return res.status(upstreamRes.status >= 400 ? upstreamRes.status : 502).json({
+        success: false,
+        message: 'Invalid JSON response received from Portfolio Signals API',
+        error: rawText.slice(0, 500),
+      });
+    }
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      return;
+    }
+    console.error('Portfolio Signals API proxy error:', err);
+    return res.status(502).json({
+      success: false,
+      message: err?.message || 'Failed to execute portfolio signals',
+    });
+  } finally {
+    req.off('close', handleClose);
   }
 });
 
@@ -386,14 +433,36 @@ app.delete('/api/portfolio', async (_req: Request, res: Response) => {
 // Vite middleware or static serving
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
+  let viteInstance: any = null;
+
+  const viteReady = !isProduction
+    ? import('vite')
+        .then(({ createServer: createViteServer }) =>
+          createViteServer({
+            server: { middlewareMode: true },
+            appType: 'spa',
+          })
+        )
+        .then((vite) => {
+          viteInstance = vite;
+          return vite;
+        })
+        .catch((err) => {
+          console.error('Failed to initialize Vite dev middleware:', err);
+          throw err;
+        })
+    : Promise.resolve(null);
 
   if (!isProduction) {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
+    app.use(async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const vite = viteInstance || (await viteReady);
+        if (!vite) return next();
+        return vite.middlewares(req, res, next);
+      } catch (err) {
+        return next(err);
+      }
     });
-    app.use(vite.middlewares);
   } else {
     const distPath = path.join(__dirname, 'dist');
     app.use(express.static(distPath));
@@ -402,12 +471,28 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Stock Portfolio App server running on http://0.0.0.0:${PORT}`);
     console.log(`🔗 Connected to upstream portfolio backend: ${TARGET_API_URL}`);
   });
+
+  const shutdown = async () => {
+    server.close();
+    if (viteInstance && typeof viteInstance.close === 'function') {
+      try {
+        await viteInstance.close();
+      } catch {
+        // Ignore Vite close errors during shutdown
+      }
+    }
+    process.exit(0);
+  };
+
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 }
 
 startServer().catch((err) => {
   console.error('Failed to start server:', err);
+  process.exit(1);
 });
